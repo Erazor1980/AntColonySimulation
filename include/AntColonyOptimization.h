@@ -12,5 +12,7 @@ public:
 
 private:
     void composeFrame();
+    void reset();
     
+    std::vector< Ant > m_vAnts;
 };

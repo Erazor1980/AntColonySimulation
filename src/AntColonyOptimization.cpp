@@ -2,21 +2,31 @@
 
 AntColonyOptimization::AntColonyOptimization()
 {
+    /* initialize random seed */
+    srand( unsigned int( time( NULL ) ) );
+
     sAppName = "AntColonyOptimization";
 }
 
 bool AntColonyOptimization::OnUserCreate()
 {
     // Called once at the start, so create things here
+    reset();
+
     return true;
 }
 
 bool AntColonyOptimization::OnUserUpdate( float fElapsedTime )
 {
-    // called once per frame
-    //for( int x = 0; x < ScreenWidth(); x++ )
-    //    for( int y = 0; y < ScreenHeight(); y++ )
-    //        Draw( x, y, olc::Pixel( rand() % 255, rand() % 255, rand() % 255 ) );
+    if( GetKey( olc::Key::ESCAPE ).bPressed )
+    {
+        reset();
+    }
+
+    for( auto &a : m_vAnts )
+    {
+        a.update( *this, fElapsedTime );
+    }
 
     composeFrame();
     return true;
@@ -25,4 +35,19 @@ bool AntColonyOptimization::OnUserUpdate( float fElapsedTime )
 void AntColonyOptimization::composeFrame()
 {
     Clear( olc::GREY );
+
+    for( const auto &a : m_vAnts )
+    {
+        a.draw( *this );
+    }
+}
+
+void AntColonyOptimization::reset()
+{
+    m_vAnts.clear();
+    for( int i = 0; i < 30; ++i )
+    {
+        Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20 );
+        m_vAnts.push_back( ant );
+    }
 }
