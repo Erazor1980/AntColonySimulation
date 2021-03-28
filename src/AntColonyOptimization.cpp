@@ -50,6 +50,6 @@ void AntColonyOptimization::reset()
         Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20 );
         m_vAnts.push_back( ant );
     }
-    //Ant ant( olc::vf2d( ( float )( ScreenWidth() / 2 ), ( float )( ScreenHeight() / 2 ) ), 100 );
+    //Ant ant( olc::vf2d( ( float )( ScreenWidth() / 2 ), ( float )( ScreenHeight() / 2 ) ), 20 );
     //m_vAnts.push_back( ant );
 }

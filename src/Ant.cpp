@@ -1,4 +1,6 @@
 #include "..\include\Ant.h"
+#define _USE_MATH_DEFINES 
+#include <math.h>
 
 Ant::Ant( const olc::vf2d position, const float size )
 {
@@ -9,13 +11,14 @@ void Ant::init( const olc::vf2d position, const float size )
 {
     m_pos       = position;
     m_size      = size;
-    m_angle     = ( float )rand() / ( float )RAND_MAX * 6.28318f;
+    //m_maxSpeed  = 25.0f + rand() % 50;
+    m_maxSpeed  = 75;
+    
+    const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
 
-    m_speed = 25.0f + rand() % 50;
-    //m_speed = 0;
-        
-    m_velocity.x = sinf( m_angle ) * m_speed;
-    m_velocity.y = -cosf( m_angle ) * m_speed;
+    m_velocity.x = sinf( rndAngle ) * 25;
+    m_velocity.y = -cosf( rndAngle ) * 25;
+
 
     /* default body positions (head top) */
     m_bodyParts[ 0 ].first = { 0, -0.35f * m_size };   /* head */
@@ -107,10 +110,17 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
 
 void Ant::update( const olc::PixelGameEngine& pge, const float timeElapsed )
 {
-    m_pos += m_velocity * timeElapsed;
+    if( eStatus::_SEARCHING == m_status )
+    {
+        searching( timeElapsed );
+    }
+    
 
-    m_timeNextMotion += timeElapsed + ( m_speed / 10 );
-    if( m_timeNextMotion > 50 )
+    m_pos += m_velocity * timeElapsed;
+    
+    /* Animation */
+    m_timeNextMotion += timeElapsed * m_velocity.mag();
+    if( m_timeNextMotion > 5 )
     {
         m_timeNextMotion = 0.0f;
         m_animation++;
@@ -126,9 +136,11 @@ olc::vf2d Ant::transformPoint( const olc::vf2d& point ) const
 {
     olc::vf2d transfromedPoint;
 
+    const float angle = atan2f( m_velocity.y, m_velocity.x ) + ( float )M_PI_2;
+
     /* rotate first */
-    transfromedPoint.x = point.x * cosf( m_angle ) - point.y * sinf( m_angle );
-    transfromedPoint.y = point.y * cosf( m_angle ) + point.x * sinf( m_angle );
+    transfromedPoint.x = point.x * cosf( angle ) - point.y * sinf( angle );
+    transfromedPoint.y = point.y * cosf( angle ) + point.x * sinf( angle );
 
     /* translate */
     transfromedPoint += m_pos;
@@ -216,5 +228,30 @@ void Ant::updateMotion()
         m_vLegs[ 5 ].m_joints[ 2 ].y -= m_size * 0.04f;
         m_vLegs[ 5 ].m_joints[ 3 ].y -= m_size * 0.04f;
         m_vLegs[ 5 ].m_joints[ 3 ].x += m_size * 0.02f;
+    }
+}
+
+void Ant::searching( const float timeElapsed )
+{
+    const float wanderStrength = 0.07f;
+    const float steerStrength = 2;
+    const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
+    olc::vf2d rndPntUnitCircle;
+    rndPntUnitCircle.x = sinf( rndAngle );
+    rndPntUnitCircle.y = -cosf( rndAngle );
+
+    m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
+
+    olc::vf2d desiredVelocity = m_desiredDirection * m_maxSpeed;
+    olc::vf2d desiredSteeringForce = ( desiredVelocity - m_velocity ) * steerStrength;
+    olc::vf2d acceleration = desiredSteeringForce;
+    if( acceleration.mag() > steerStrength )
+    {
+        acceleration = acceleration.norm() * steerStrength;
+    }
+    m_velocity = m_velocity + acceleration * timeElapsed * 50;
+    if( m_velocity.mag() > m_maxSpeed )
+    {
+        m_velocity = m_velocity.norm() * m_maxSpeed;
     }
 }
