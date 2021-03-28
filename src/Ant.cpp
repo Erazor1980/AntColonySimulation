@@ -11,14 +11,7 @@ void Ant::init( const olc::vf2d position, const float size )
 {
     m_pos       = position;
     m_size      = size;
-    //m_maxSpeed  = 25.0f + rand() % 50;
     m_maxSpeed  = 75;
-    
-    const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
-
-    m_velocity.x = sinf( rndAngle ) * 25;
-    m_velocity.y = -cosf( rndAngle ) * 25;
-
 
     /* default body positions (head top) */
     m_bodyParts[ 0 ].first = { 0, -0.35f * m_size };   /* head */
@@ -233,8 +226,8 @@ void Ant::updateMotion()
 
 void Ant::searching( const float timeElapsed )
 {
-    const float wanderStrength = 0.07f;
-    const float steerStrength = 2;
+    const float wanderStrength = 0.17f;
+    const float steerStrength = 0.5f;
     const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
     olc::vf2d rndPntUnitCircle;
     rndPntUnitCircle.x = sinf( rndAngle );
@@ -253,5 +246,9 @@ void Ant::searching( const float timeElapsed )
     if( m_velocity.mag() > m_maxSpeed )
     {
         m_velocity = m_velocity.norm() * m_maxSpeed;
+    }
+    if( m_velocity.mag() < 25 )
+    {
+        m_velocity = m_velocity.norm() * 25;
     }
 }
