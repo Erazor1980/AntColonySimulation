@@ -45,7 +45,7 @@ void AntColonyOptimization::composeFrame()
 void AntColonyOptimization::reset()
 {
     m_vAnts.clear();
-    for( int i = 0; i < 30; ++i )
+    for( int i = 0; i < 300; ++i )
     {
         Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20 );
         m_vAnts.push_back( ant );

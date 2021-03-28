@@ -4,7 +4,7 @@
 int main()
 {
     AntColonyOptimization game;
-    if( game.Construct( 800, 600, 1, 1 ) )
+    if( game.Construct( 1200, 800, 1, 1 ) )
         game.Start();
     return 0;
 }
