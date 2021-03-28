@@ -16,7 +16,7 @@ bool AntColonyOptimization::OnUserCreate()
     return true;
 }
 
-bool AntColonyOptimization::OnUserUpdate( float fElapsedTime )
+bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
 {
     if( GetKey( olc::Key::ESCAPE ).bPressed )
     {
@@ -25,7 +25,7 @@ bool AntColonyOptimization::OnUserUpdate( float fElapsedTime )
 
     for( auto &a : m_vAnts )
     {
-        a.update( *this, fElapsedTime );
+        a.update( *this, timeElapsed );
     }
 
     composeFrame();
@@ -50,4 +50,6 @@ void AntColonyOptimization::reset()
         Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20 );
         m_vAnts.push_back( ant );
     }
+    //Ant ant( olc::vf2d( ( float )( ScreenWidth() / 2 ), ( float )( ScreenHeight() / 2 ) ), 100 );
+    //m_vAnts.push_back( ant );
 }

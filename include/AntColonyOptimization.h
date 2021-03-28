@@ -8,7 +8,7 @@ public:
 
 public:
     bool OnUserCreate() override;
-    bool OnUserUpdate( float fElapsedTime ) override;
+    bool OnUserUpdate( float timeElapsed ) override;
 
 private:
     void composeFrame();

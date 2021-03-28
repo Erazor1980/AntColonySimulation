@@ -11,7 +11,8 @@ void Ant::init( const olc::vf2d position, const float size )
     m_size      = size;
     m_angle     = ( float )rand() / ( float )RAND_MAX * 6.28318f;
 
-    m_speed = 5 + rand() % 100;
+    m_speed = 25.0f + rand() % 50;
+    //m_speed = 0;
         
     m_velocity.x = sinf( m_angle ) * m_speed;
     m_velocity.y = -cosf( m_angle ) * m_speed;
@@ -106,8 +107,19 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
 
 void Ant::update( const olc::PixelGameEngine& pge, const float timeElapsed )
 {
-    // VELOCITY changes POSITION (with respect to time)
     m_pos += m_velocity * timeElapsed;
+
+    m_timeNextMotion += timeElapsed + ( m_speed / 10 );
+    if( m_timeNextMotion > 50 )
+    {
+        m_timeNextMotion = 0.0f;
+        m_animation++;
+        if( m_animation > 3 )
+        {
+            m_animation = 0;
+        }
+        updateMotion();
+    }
 }
 
 olc::vf2d Ant::transformPoint( const olc::vf2d& point ) const
@@ -122,4 +134,87 @@ olc::vf2d Ant::transformPoint( const olc::vf2d& point ) const
     transfromedPoint += m_pos;
 
     return transfromedPoint;
+}
+
+void Ant::updateMotion()
+{
+    m_vLegs.clear();
+    m_vLegs.push_back( { m_bodyParts[ 1 ].first,{ -m_size / 4, -m_size / 5 },{ -m_size / 2.5f, -m_size * 0.375f },{ -m_size / 2.2f, -m_size * 0.35f } } );   // top left
+    m_vLegs.push_back( { m_bodyParts[ 1 ].first,{ m_size / 4, -m_size / 5 },{ m_size / 2.5f, -m_size * 0.375f },{ m_size / 2.2f, -m_size * 0.35f } } );      // top right
+    m_vLegs.push_back( { m_bodyParts[ 1 ].first + olc::vf2d( 0, 0.1f * m_size ),{ -m_size / 3.5f, m_bodyParts[ 1 ].first.y },
+                       { -m_size / 2.3f, m_size * 0.075f },{ -m_size / 2.1f, m_size * 0.075f } } );    // middle left
+    m_vLegs.push_back( { m_bodyParts[ 1 ].first + olc::vf2d( 0, 0.1f * m_size ),{ m_size / 3.5f, m_bodyParts[ 1 ].first.y },
+                       { m_size / 2.3f, m_size * 0.075f },{ m_size / 2.1f, m_size * 0.075f } } );      // middle right
+    m_vLegs.push_back( { m_bodyParts[ 1 ].first + olc::vf2d( 0, 0.1f * m_size ),{ -m_size / 3.5f, m_size * 0.1f },
+                       { -m_size / 3.3f, m_size * 0.5f },{ -m_size / 2.8f, m_size * 0.55f } } );        // bottom left
+    m_vLegs.push_back( { m_bodyParts[ 1 ].first + olc::vf2d( 0, 0.1f * m_size ),{ m_size / 3.5f, m_size * 0.1f },
+                       { m_size / 3.3f, m_size * 0.5f },{ m_size / 2.8f, m_size * 0.55f } } );        // bottom right
+    if( 0 == m_animation )
+    {
+        
+    }
+    else if( 1 == m_animation )
+    {
+        m_vLegs[ 0 ].m_joints[ 1 ].y -= m_size * 0.02f;
+        m_vLegs[ 0 ].m_joints[ 2 ].x += m_size * 0.05f;
+        m_vLegs[ 0 ].m_joints[ 2 ].y -= m_size * 0.02f;
+        m_vLegs[ 0 ].m_joints[ 3 ].y -= m_size * 0.1f;
+        m_vLegs[ 0 ].m_joints[ 3 ].x += m_size * 0.02f;
+
+        m_vLegs[ 1 ].m_joints[ 1 ].y += m_size * 0.02f;
+        m_vLegs[ 1 ].m_joints[ 2 ].x += m_size * 0.05f;
+        m_vLegs[ 1 ].m_joints[ 2 ].y += m_size * 0.02f;
+        m_vLegs[ 1 ].m_joints[ 3 ].y += m_size * 0.05f;
+        m_vLegs[ 1 ].m_joints[ 3 ].x += m_size * 0.02f;
+
+        m_vLegs[ 2 ].m_joints[ 1 ].y += m_size * 0.08f;
+        m_vLegs[ 2 ].m_joints[ 2 ].y += m_size * 0.08f;
+        m_vLegs[ 2 ].m_joints[ 3 ].y += m_size * 0.08f;
+
+        m_vLegs[ 3 ].m_joints[ 1 ].y -= m_size * 0.02f;
+        m_vLegs[ 3 ].m_joints[ 2 ].y -= m_size * 0.05f;
+        m_vLegs[ 3 ].m_joints[ 3 ].y -= m_size * 0.05f;
+
+        m_vLegs[ 4 ].m_joints[ 1 ].y -= m_size * 0.04f;
+        m_vLegs[ 4 ].m_joints[ 2 ].y -= m_size * 0.04f;
+        m_vLegs[ 4 ].m_joints[ 3 ].y -= m_size * 0.04f;
+        m_vLegs[ 4 ].m_joints[ 3 ].x -= m_size * 0.02f;
+
+        m_vLegs[ 5 ].m_joints[ 1 ].y += m_size * 0.07f;
+        m_vLegs[ 5 ].m_joints[ 2 ].y += m_size * 0.07f;
+        m_vLegs[ 5 ].m_joints[ 3 ].y += m_size * 0.07f;
+        m_vLegs[ 5 ].m_joints[ 3 ].x += m_size * 0.02f;
+    }
+    else if( 3 == m_animation )
+    {
+        m_vLegs[ 0 ].m_joints[ 1 ].y += m_size * 0.02f;
+        m_vLegs[ 0 ].m_joints[ 2 ].x -= m_size * 0.05f;
+        m_vLegs[ 0 ].m_joints[ 2 ].y += m_size * 0.02f;
+        m_vLegs[ 0 ].m_joints[ 3 ].y += m_size * 0.05f;
+        m_vLegs[ 0 ].m_joints[ 3 ].x -= m_size * 0.02f;
+
+        m_vLegs[ 1 ].m_joints[ 1 ].y -= m_size * 0.02f;
+        m_vLegs[ 1 ].m_joints[ 2 ].x -= m_size * 0.05f;
+        m_vLegs[ 1 ].m_joints[ 2 ].y -= m_size * 0.02f;
+        m_vLegs[ 1 ].m_joints[ 3 ].y -= m_size * 0.1f;
+        m_vLegs[ 1 ].m_joints[ 3 ].x -= m_size * 0.02f;
+
+        m_vLegs[ 2 ].m_joints[ 1 ].y -= m_size * 0.02f;
+        m_vLegs[ 2 ].m_joints[ 2 ].y -= m_size * 0.05f;
+        m_vLegs[ 2 ].m_joints[ 3 ].y -= m_size * 0.05f;
+
+        m_vLegs[ 3 ].m_joints[ 1 ].y += m_size * 0.08f;
+        m_vLegs[ 3 ].m_joints[ 2 ].y += m_size * 0.08f;
+        m_vLegs[ 3 ].m_joints[ 3 ].y += m_size * 0.08f;
+
+        m_vLegs[ 4 ].m_joints[ 1 ].y += m_size * 0.07f;
+        m_vLegs[ 4 ].m_joints[ 2 ].y += m_size * 0.07f;
+        m_vLegs[ 4 ].m_joints[ 3 ].y += m_size * 0.07f;
+        m_vLegs[ 4 ].m_joints[ 3 ].x -= m_size * 0.02f;        
+
+        m_vLegs[ 5 ].m_joints[ 1 ].y -= m_size * 0.04f;
+        m_vLegs[ 5 ].m_joints[ 2 ].y -= m_size * 0.04f;
+        m_vLegs[ 5 ].m_joints[ 3 ].y -= m_size * 0.04f;
+        m_vLegs[ 5 ].m_joints[ 3 ].x += m_size * 0.02f;
+    }
 }
