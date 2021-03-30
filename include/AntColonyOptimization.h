@@ -12,7 +12,7 @@ public:
 
 private:
     void composeFrame();
-    void reset();
+    void reset( const bool bOnlyOneAnt = false );
     
     std::vector< Ant > m_vAnts;
 

@@ -4,7 +4,7 @@
 class Ant
 {
 public:
-    Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos );
+    Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight );
 
     void draw( olc::PixelGameEngine& pge ) const;
     void update( const olc::PixelGameEngine& pge, const float timeElapsed );
@@ -28,12 +28,13 @@ private:
     void updateMotion();
     void walk( const float timeElapsed );  // running in random direction, searching for food
     bool checkForFood( olc::vf2d& foodPos ) const;
-    void pickUpFood();
+    bool pickUpFood();  // if false is returned, someone else already picked it up!
 
     olc::vf2d   m_pos;
     olc::vf2d   m_velocity = { 0, 0 };
     float       m_size;
     float       m_maxSpeed;
+    float       m_currSpeed;
     olc::vf2d   m_desiredDirection;
     float       m_viewingAngle;
     float       m_viewingRadius;
@@ -52,4 +53,7 @@ private:
 
     int m_animation = 0;                            // current animation state of the ant (movement)
     float m_timeNextMotion = 0.0f;                  // used to update moving animations
+
+    float m_screenWidth;
+    float m_screenHeight;
 };

@@ -4,10 +4,12 @@
 
 #define DEBUG_INFO 0
 
-Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos )
+Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight )
     : 
     m_vFood( vFood ),
-    m_nestPos( nestPos )
+    m_nestPos( nestPos ),
+    m_screenWidth( screenWidth ),
+    m_screenHeight( screenHeight )
 {
     init( position, size );
 }
@@ -16,7 +18,8 @@ void Ant::init( const olc::vf2d position, const float size )
 {
     m_pos           = position;
     m_size          = size;
-    m_maxSpeed      = 100;
+    m_maxSpeed      = 125 + ( rand() % 100 );
+    m_currSpeed     = m_maxSpeed * 0.5f;
     m_viewingAngle  = ( float )( 120 * M_PI / 180.0 );
     m_viewingRadius = size * 2.5f;
 
@@ -276,15 +279,16 @@ void Ant::updateMotion()
 void Ant::walk( const float timeElapsed )
 {
     const float wanderStrength = 0.17f;
-    float steerStrength = 1.0f;
+    float steerStrength = 1.5f;
     
     if( eStatus::_SEARCHING == m_status )
     {
         const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
         olc::vf2d rndPntUnitCircle;
-        rndPntUnitCircle.x = sinf( rndAngle );
-        rndPntUnitCircle.y = -cosf( rndAngle );
-        m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
+        rndPntUnitCircle.x  = sinf( rndAngle );
+        rndPntUnitCircle.y  = -cosf( rndAngle );
+        m_desiredDirection  = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
+        m_currSpeed         = m_maxSpeed * 0.5f;
 
         if( true == checkForFood( m_targetFoodPos ) )
         {
@@ -297,13 +301,16 @@ void Ant::walk( const float timeElapsed )
         const float pickupRadius = m_size / 4.0f;
         if( ( m_targetFoodPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag() < pickupRadius )
         {
-            pickUpFood();
-            m_status = eStatus::_FOOD_COLLECTED;
+            if( true == pickUpFood() )
+            {
+                m_status = eStatus::_FOOD_COLLECTED;
+            }
         }
         else
         {
-            steerStrength = 2.5f;
-            m_desiredDirection = ( m_targetFoodPos - m_pos ).norm();
+            steerStrength       = 2.5f;
+            m_desiredDirection  = ( m_targetFoodPos - m_pos ).norm();
+            m_currSpeed         = m_maxSpeed * 0.85f;
         }
     }
     if( eStatus::_FOOD_COLLECTED == m_status )
@@ -314,12 +321,36 @@ void Ant::walk( const float timeElapsed )
         }
         else
         {
-            steerStrength = 3.5f;
-            m_desiredDirection = ( m_nestPos - m_pos ).norm();
+            steerStrength       = 3.5f;
+            m_desiredDirection  = ( m_nestPos - m_pos ).norm();
+            m_currSpeed         = m_maxSpeed;
         }
     }
 
-    olc::vf2d desiredVelocity = m_desiredDirection * m_maxSpeed;
+    /* boundary checks */
+    const auto headPos = transformPoint( m_bodyParts[ 0 ].first );
+    if( headPos.x < m_size && m_velocity.x < 0 )
+    {
+        m_desiredDirection.x = 100;
+        steerStrength = 5.0f;
+    }
+    else if( headPos.x > m_screenWidth - m_size && m_velocity.x > 0 )
+    {
+        m_desiredDirection.x = -100;
+        steerStrength = 5.0f;
+    }
+    if( headPos.y < m_size && m_velocity.y < 0 )
+    {
+        m_desiredDirection.y = 100;
+        steerStrength = 5.0f;
+    }
+    else if( headPos.y > m_screenHeight - m_size && m_velocity.y > 0 )
+    {
+        m_desiredDirection.y = -100;
+        steerStrength = 5.0f;
+    }
+
+    olc::vf2d desiredVelocity = m_desiredDirection * m_currSpeed;
     olc::vf2d desiredSteeringForce = ( desiredVelocity - m_velocity ) * steerStrength;
     olc::vf2d acceleration = desiredSteeringForce;
     if( acceleration.mag() > steerStrength )
@@ -327,9 +358,9 @@ void Ant::walk( const float timeElapsed )
         acceleration = acceleration.norm() * steerStrength;
     }
     m_velocity = m_velocity + acceleration * timeElapsed * 50;
-    if( m_velocity.mag() > m_maxSpeed )
+    if( m_velocity.mag() > m_currSpeed )
     {
-        m_velocity = m_velocity.norm() * m_maxSpeed;
+        m_velocity = m_velocity.norm() * m_currSpeed;
     }
     if( m_velocity.mag() < 45 )
     {
@@ -369,15 +400,15 @@ bool Ant::checkForFood( olc::vf2d& foodPos ) const
     return bFoodFound;
 }
 
-void Ant::pickUpFood()
+bool Ant::pickUpFood()
 {
     for( int i = 0; i < ( int )m_vFood.size(); ++i )
     {
         if( m_vFood[ i ] == m_targetFoodPos )
         {
             m_vFood.erase( m_vFood.begin() + i );
-            break;
+            return true;
         }
     }
-    int deb = 0;
+    return false;
 }
