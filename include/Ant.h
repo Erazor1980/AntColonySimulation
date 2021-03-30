@@ -4,11 +4,12 @@
 class Ant
 {
 public:
-    Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood );
+    Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos );
 
     void draw( olc::PixelGameEngine& pge ) const;
     void update( const olc::PixelGameEngine& pge, const float timeElapsed );
     
+    void setNestPos( const olc::vf2d& nestPos );    /* to be able to change it ouside */
 private:
     struct Leg
     {
@@ -39,7 +40,8 @@ private:
 
     olc::vf2d   m_targetFoodPos;
     std::vector< olc::vf2d >& m_vFood;
-    
+    olc::vf2d m_nestPos;
+
     eStatus m_status = _SEARCHING;
 
     /* body, legs, antennas */

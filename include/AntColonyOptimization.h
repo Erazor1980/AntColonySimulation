@@ -17,4 +17,6 @@ private:
     std::vector< Ant > m_vAnts;
 
     std::vector< olc::vf2d > m_vFood;
+
+    olc::vf2d m_nestPos;
 };

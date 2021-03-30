@@ -2,11 +2,12 @@
 #define _USE_MATH_DEFINES 
 #include <math.h>
 
-#define DEBUG_INFO 1
+#define DEBUG_INFO 0
 
-Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood )
+Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos )
     : 
-    m_vFood( vFood )
+    m_vFood( vFood ),
+    m_nestPos( nestPos )
 {
     init( position, size );
 }
@@ -15,7 +16,7 @@ void Ant::init( const olc::vf2d position, const float size )
 {
     m_pos           = position;
     m_size          = size;
-    m_maxSpeed      = 75;
+    m_maxSpeed      = 100;
     m_viewingAngle  = ( float )( 120 * M_PI / 180.0 );
     m_viewingRadius = size * 2.5f;
 
@@ -168,6 +169,11 @@ void Ant::update( const olc::PixelGameEngine& pge, const float timeElapsed )
     }
 }
 
+void Ant::setNestPos( const olc::vf2d & nestPos )
+{
+    m_nestPos = nestPos;
+}
+
 olc::vf2d Ant::transformPoint( const olc::vf2d& point ) const
 {
     olc::vf2d transfromedPoint;
@@ -296,22 +302,20 @@ void Ant::walk( const float timeElapsed )
         }
         else
         {
-            steerStrength = 1.5f;
+            steerStrength = 2.5f;
             m_desiredDirection = ( m_targetFoodPos - m_pos ).norm();
         }
     }
     if( eStatus::_FOOD_COLLECTED == m_status )
     {
-        const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
-        olc::vf2d rndPntUnitCircle;
-        rndPntUnitCircle.x = sinf( rndAngle );
-        rndPntUnitCircle.y = -cosf( rndAngle );
-        m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
-
-        if( true == checkForFood( m_targetFoodPos ) )
+        if( ( m_nestPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag() < m_size / 2.0f )
         {
-            m_desiredDirection = ( m_targetFoodPos - m_pos ).norm();
-            m_status = eStatus::_FOOD_FOUND;
+            m_status = eStatus::_SEARCHING;
+        }
+        else
+        {
+            steerStrength = 3.5f;
+            m_desiredDirection = ( m_nestPos - m_pos ).norm();
         }
     }
 
@@ -327,9 +331,9 @@ void Ant::walk( const float timeElapsed )
     {
         m_velocity = m_velocity.norm() * m_maxSpeed;
     }
-    if( m_velocity.mag() < 25 )
+    if( m_velocity.mag() < 45 )
     {
-        m_velocity = m_velocity.norm() * 25;
+        m_velocity = m_velocity.norm() * 45;
     }
 
 
