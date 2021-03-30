@@ -16,8 +16,8 @@ void Ant::init( const olc::vf2d position, const float size )
     m_pos           = position;
     m_size          = size;
     m_maxSpeed      = 75;
-    m_viewingAngle  = ( float )( 90 * M_PI / 180.0 );
-    m_viewingRadius = size * 1.5f;
+    m_viewingAngle  = ( float )( 120 * M_PI / 180.0 );
+    m_viewingRadius = size * 2.5f;
 
     /* default body positions (head top) */
     m_bodyParts[ 0 ].first = { 0, -0.35f * m_size };   /* head */
@@ -90,6 +90,13 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
         }
     }
 
+    /* draw food (if picked up) */
+    if( eStatus::_FOOD_COLLECTED == m_status )
+    {
+        const olc::vf2d pos = ( m_velocity.norm() * m_size / 4.0f ) + transformPoint( m_bodyParts[ 0 ].first );
+        pge.FillCircle( pos, 4, olc::GREEN );
+    }
+
     /* draw antennas */
     for( int i = 0; i < 3; ++i )
     {
@@ -121,20 +128,8 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
     pntLeft     = ( pntLeft.norm() * m_viewingRadius ) + headPos;
     pntRight    = ( pntRight.norm() * m_viewingRadius ) + headPos;
 
-    bool bFoodFound = false;
-    for( auto f : m_vFood )
-    {
-        if( ( headPos - f ).mag() < m_viewingRadius )
-        {
-            const float footAngle = atan2f( ( f - headPos ).y, ( f - headPos ).x );
-            if( footAngle > leftAngle && footAngle < rightAngle )
-            {
-                bFoodFound = true;
-            }
-        }
-    }
-
-    if( bFoodFound )
+    olc::vf2d foodPos;
+    if( true == checkForFood( foodPos ) )
     {
         pge.DrawCircle( headPos, ( int )m_viewingRadius, olc::GREEN );
     }
@@ -145,6 +140,10 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
 
     pge.DrawLine( headPos, pntLeft, olc::DARK_BLUE );
     pge.DrawLine( headPos, pntRight, olc::DARK_BLUE );
+
+    pge.DrawLine( headPos, headPos + m_desiredDirection, olc::DARK_BLUE );
+
+    pge.DrawStringDecal( m_pos - olc::vf2d( m_size, -m_size ), "Status: " + std::to_string( m_status ), olc::DARK_GREEN, { 1.5, 1.5 } );
 #endif
 }
 
@@ -271,7 +270,7 @@ void Ant::updateMotion()
 void Ant::walk( const float timeElapsed )
 {
     const float wanderStrength = 0.17f;
-    const float steerStrength = 0.5f;
+    float steerStrength = 1.0f;
     
     if( eStatus::_SEARCHING == m_status )
     {
@@ -280,10 +279,40 @@ void Ant::walk( const float timeElapsed )
         rndPntUnitCircle.x = sinf( rndAngle );
         rndPntUnitCircle.y = -cosf( rndAngle );
         m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
-    }
-    else if( eStatus::_FOOD_FOUND )
-    {
 
+        if( true == checkForFood( m_targetFoodPos ) )
+        {
+            m_desiredDirection = ( m_targetFoodPos - m_pos ).norm();
+            m_status = eStatus::_FOOD_FOUND;
+        }
+    }
+    else if( eStatus::_FOOD_FOUND == m_status )
+    {
+        const float pickupRadius = m_size / 4.0f;
+        if( ( m_targetFoodPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag() < pickupRadius )
+        {
+            pickUpFood();
+            m_status = eStatus::_FOOD_COLLECTED;
+        }
+        else
+        {
+            steerStrength = 1.5f;
+            m_desiredDirection = ( m_targetFoodPos - m_pos ).norm();
+        }
+    }
+    if( eStatus::_FOOD_COLLECTED == m_status )
+    {
+        const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
+        olc::vf2d rndPntUnitCircle;
+        rndPntUnitCircle.x = sinf( rndAngle );
+        rndPntUnitCircle.y = -cosf( rndAngle );
+        m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
+
+        if( true == checkForFood( m_targetFoodPos ) )
+        {
+            m_desiredDirection = ( m_targetFoodPos - m_pos ).norm();
+            m_status = eStatus::_FOOD_FOUND;
+        }
     }
 
     olc::vf2d desiredVelocity = m_desiredDirection * m_maxSpeed;
@@ -304,4 +333,47 @@ void Ant::walk( const float timeElapsed )
     }
 
 
+}
+
+bool Ant::checkForFood( olc::vf2d& foodPos ) const
+{
+    if( m_vFood.empty() )
+    {
+        return false;
+    }
+
+    const auto headPos = transformPoint( m_bodyParts[ 0 ].first );
+    const float angle = atan2f( m_velocity.y, m_velocity.x );
+    const float leftAngle = angle - m_viewingAngle / 2.0f;
+    const float rightAngle = angle + m_viewingAngle / 2.0f;
+
+    bool bFoodFound = false;
+    for( auto f : m_vFood )
+    {
+        if( ( headPos - f ).mag() < m_viewingRadius )
+        {
+            const float footAngle = atan2f( ( f - headPos ).y, ( f - headPos ).x );
+            if( footAngle > leftAngle && footAngle < rightAngle )
+            {
+                bFoodFound = true;
+                foodPos = f;
+                break;
+            }
+        }
+    }
+
+    return bFoodFound;
+}
+
+void Ant::pickUpFood()
+{
+    for( int i = 0; i < ( int )m_vFood.size(); ++i )
+    {
+        if( m_vFood[ i ] == m_targetFoodPos )
+        {
+            m_vFood.erase( m_vFood.begin() + i );
+            break;
+        }
+    }
+    int deb = 0;
 }

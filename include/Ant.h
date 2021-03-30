@@ -26,7 +26,8 @@ private:
     olc::vf2d transformPoint( const olc::vf2d& point ) const; // rotates and translates given point (based on m_pos and m_angle)
     void updateMotion();
     void walk( const float timeElapsed );  // running in random direction, searching for food
-    //void checkForFood()
+    bool checkForFood( olc::vf2d& foodPos ) const;
+    void pickUpFood();
 
     olc::vf2d   m_pos;
     olc::vf2d   m_velocity = { 0, 0 };
@@ -35,8 +36,10 @@ private:
     olc::vf2d   m_desiredDirection;
     float       m_viewingAngle;
     float       m_viewingRadius;
-    std::vector< olc::vf2d >& m_vFood;
 
+    olc::vf2d   m_targetFoodPos;
+    std::vector< olc::vf2d >& m_vFood;
+    
     eStatus m_status = _SEARCHING;
 
     /* body, legs, antennas */
