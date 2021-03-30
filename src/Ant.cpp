@@ -18,8 +18,8 @@ void Ant::init( const olc::vf2d position, const float size )
 {
     m_pos           = position;
     m_size          = size;
-    m_maxSpeed      = 125 + ( rand() % 100 );
-    m_currSpeed     = m_maxSpeed * 0.5f;
+    m_maxSpeed      = 100.0f + ( rand() % 50 );
+    m_currSpeed     = m_maxSpeed * 0.7f;
     m_viewingAngle  = ( float )( 120 * M_PI / 180.0 );
     m_viewingRadius = size * 2.5f;
 
@@ -288,7 +288,7 @@ void Ant::walk( const float timeElapsed )
         rndPntUnitCircle.x  = sinf( rndAngle );
         rndPntUnitCircle.y  = -cosf( rndAngle );
         m_desiredDirection  = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
-        m_currSpeed         = m_maxSpeed * 0.5f;
+        m_currSpeed         = m_maxSpeed * 0.7f;
 
         if( true == checkForFood( m_targetFoodPos ) )
         {
@@ -308,9 +308,9 @@ void Ant::walk( const float timeElapsed )
         }
         else
         {
-            steerStrength       = 2.5f;
+            steerStrength       = 4.5f;
             m_desiredDirection  = ( m_targetFoodPos - m_pos ).norm();
-            m_currSpeed         = m_maxSpeed * 0.85f;
+            m_currSpeed         = m_maxSpeed * 0.65f;
         }
     }
     if( eStatus::_FOOD_COLLECTED == m_status )
@@ -323,7 +323,7 @@ void Ant::walk( const float timeElapsed )
         {
             steerStrength       = 3.5f;
             m_desiredDirection  = ( m_nestPos - m_pos ).norm();
-            m_currSpeed         = m_maxSpeed;
+            m_currSpeed         = m_maxSpeed * 0.75f;
         }
     }
 
