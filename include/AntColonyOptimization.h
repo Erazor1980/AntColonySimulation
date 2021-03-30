@@ -15,4 +15,6 @@ private:
     void reset();
     
     std::vector< Ant > m_vAnts;
+
+    std::vector< olc::vf2d > m_vFood;
 };

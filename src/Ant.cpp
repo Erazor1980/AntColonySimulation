@@ -2,16 +2,22 @@
 #define _USE_MATH_DEFINES 
 #include <math.h>
 
-Ant::Ant( const olc::vf2d position, const float size )
+#define DEBUG_INFO 1
+
+Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood )
+    : 
+    m_vFood( vFood )
 {
     init( position, size );
 }
 
 void Ant::init( const olc::vf2d position, const float size )
 {
-    m_pos       = position;
-    m_size      = size;
-    m_maxSpeed  = 75;
+    m_pos           = position;
+    m_size          = size;
+    m_maxSpeed      = 75;
+    m_viewingAngle  = ( float )( 90 * M_PI / 180.0 );
+    m_viewingRadius = size * 1.5f;
 
     /* default body positions (head top) */
     m_bodyParts[ 0 ].first = { 0, -0.35f * m_size };   /* head */
@@ -99,14 +105,52 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
     {
         pge.FillCircle( bodyPointsTransformed[ i ], ( int )m_bodyParts[ i ].second, olc::BLACK );
     }
+
+#if DEBUG_INFO
+    const auto headPos = bodyPointsTransformed[ 0 ];
+    const float angle = atan2f( m_velocity.y, m_velocity.x );
+    const float leftAngle = angle - m_viewingAngle / 2.0f;
+    const float rightAngle = angle + m_viewingAngle / 2.0f;
+
+    olc::vf2d pntLeft;
+    olc::vf2d pntRight;
+    pntLeft.x   = cosf( leftAngle );
+    pntLeft.y   = sinf( leftAngle );
+    pntRight.x  = cosf( rightAngle );
+    pntRight.y  = sinf( rightAngle );
+    pntLeft     = ( pntLeft.norm() * m_viewingRadius ) + headPos;
+    pntRight    = ( pntRight.norm() * m_viewingRadius ) + headPos;
+
+    bool bFoodFound = false;
+    for( auto f : m_vFood )
+    {
+        if( ( headPos - f ).mag() < m_viewingRadius )
+        {
+            const float footAngle = atan2f( ( f - headPos ).y, ( f - headPos ).x );
+            if( footAngle > leftAngle && footAngle < rightAngle )
+            {
+                bFoodFound = true;
+            }
+        }
+    }
+
+    if( bFoodFound )
+    {
+        pge.DrawCircle( headPos, ( int )m_viewingRadius, olc::GREEN );
+    }
+    else
+    {
+        pge.DrawCircle( headPos, ( int )m_viewingRadius, olc::RED );
+    }
+
+    pge.DrawLine( headPos, pntLeft, olc::DARK_BLUE );
+    pge.DrawLine( headPos, pntRight, olc::DARK_BLUE );
+#endif
 }
 
 void Ant::update( const olc::PixelGameEngine& pge, const float timeElapsed )
 {
-    if( eStatus::_SEARCHING == m_status )
-    {
-        searching( timeElapsed );
-    }
+    walk( timeElapsed );
     
 
     m_pos += m_velocity * timeElapsed;
@@ -224,16 +268,23 @@ void Ant::updateMotion()
     }
 }
 
-void Ant::searching( const float timeElapsed )
+void Ant::walk( const float timeElapsed )
 {
     const float wanderStrength = 0.17f;
     const float steerStrength = 0.5f;
-    const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
-    olc::vf2d rndPntUnitCircle;
-    rndPntUnitCircle.x = sinf( rndAngle );
-    rndPntUnitCircle.y = -cosf( rndAngle );
+    
+    if( eStatus::_SEARCHING == m_status )
+    {
+        const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
+        olc::vf2d rndPntUnitCircle;
+        rndPntUnitCircle.x = sinf( rndAngle );
+        rndPntUnitCircle.y = -cosf( rndAngle );
+        m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
+    }
+    else if( eStatus::_FOOD_FOUND )
+    {
 
-    m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
+    }
 
     olc::vf2d desiredVelocity = m_desiredDirection * m_maxSpeed;
     olc::vf2d desiredSteeringForce = ( desiredVelocity - m_velocity ) * steerStrength;
@@ -251,4 +302,6 @@ void Ant::searching( const float timeElapsed )
     {
         m_velocity = m_velocity.norm() * 25;
     }
+
+
 }

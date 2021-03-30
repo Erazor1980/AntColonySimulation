@@ -4,7 +4,7 @@
 class Ant
 {
 public:
-    Ant( const olc::vf2d position, const float size );
+    Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood );
 
     void draw( olc::PixelGameEngine& pge ) const;
     void update( const olc::PixelGameEngine& pge, const float timeElapsed );
@@ -25,13 +25,17 @@ private:
     void init( const olc::vf2d position, const float size );
     olc::vf2d transformPoint( const olc::vf2d& point ) const; // rotates and translates given point (based on m_pos and m_angle)
     void updateMotion();
-    void searching( const float timeElapsed );  // running in random direction, searching for food
+    void walk( const float timeElapsed );  // running in random direction, searching for food
+    //void checkForFood()
 
     olc::vf2d   m_pos;
     olc::vf2d   m_velocity = { 0, 0 };
     float       m_size;
     float       m_maxSpeed;
     olc::vf2d   m_desiredDirection;
+    float       m_viewingAngle;
+    float       m_viewingRadius;
+    std::vector< olc::vf2d >& m_vFood;
 
     eStatus m_status = _SEARCHING;
 
