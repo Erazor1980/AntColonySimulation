@@ -13,7 +13,7 @@ bool AntColonyOptimization::OnUserCreate()
     // Called once at the start, so create things here
 
     m_nestPos = olc::vf2d( ScreenWidth() / 2.0f , ScreenHeight() / 2.0f );
-
+    m_homePheromoneMap = PheromoneMap( ScreenWidth(), ScreenHeight(), false, 7 );
     reset();
 
     return true;
@@ -59,6 +59,8 @@ void AntColonyOptimization::composeFrame()
 {
     Clear( olc::Pixel( 184, 134, 11 ) );
 
+    m_homePheromoneMap.draw( *this );
+
     FillCircle( m_nestPos, 20, olc::Pixel( 139, 69, 19 ) );
 
     for( const auto &f : m_vFood )
@@ -86,11 +88,11 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
     }
     else
     {
-        for( int i = 0; i < 500; ++i )
+        for( int i = 0; i < 2500; ++i )
         {
             //Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20, m_vFood, m_nestPos, width, height );
             //Ant ant( olc::vf2d( width / 2, height / 2 ), 20, m_vFood, m_nestPos, width, height );
-            Ant ant( m_nestPos + olc::vf2d( ( float )( -20 + rand() % 40 ), ( float )( -20 + rand() % 40 ) ), 20, m_vFood, m_nestPos, width, height );
+            Ant ant( m_nestPos + olc::vf2d( ( float )( -20 + rand() % 40 ), ( float )( -20 + rand() % 40 ) ), 15, m_vFood, m_nestPos, width, height );
             m_vAnts.push_back( ant );
         }
     }    
