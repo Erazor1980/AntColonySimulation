@@ -15,7 +15,7 @@ void PheromoneMap::addPheromone( const olc::vf2d& pos, const bool bFoodPheromone
     }
     else
     {
-        p.m_color = olc::GREEN;
+        p.m_color = olc::BLUE;
     }
 
     m_vPheromones.push_back( p );
@@ -48,7 +48,7 @@ void PheromoneMap::draw( olc::PixelGameEngine& pge ) const
         const float f = ( p.m_maxLifeTime - p.m_lifeTime ) / p.m_maxLifeTime;
         const int alpha = std::max( 20, int( f * 255 ) );
         auto transpColor = olc::Pixel( p.m_color.r, p.m_color.g, p.m_color.b, alpha );
-        pge.FillCircle( p.m_pos, 2, transpColor );
+        pge.FillCircle( p.m_pos, 1, transpColor );
     }
 }
 

@@ -22,6 +22,7 @@ void Ant::init( const olc::vf2d position, const float size )
     m_currSpeed     = m_maxSpeed * 0.7f;
     m_viewingAngle  = ( float )( 120 * M_PI / 180.0 );
     m_viewingRadius = size * 2.5f;
+    m_lastPheromonePos = olc::vf2d( -1.0f, -1.0f );
 
     /* default body positions (head top) */
     m_bodyParts[ 0 ].first = { 0, -0.35f * m_size };   /* head */
@@ -151,12 +152,37 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
 #endif
 }
 
-void Ant::update( const olc::PixelGameEngine& pge, const float timeElapsed )
+void Ant::update( PheromoneMap& pheromones, const float timeElapsed )
 {
     walk( timeElapsed );
     
-
     m_pos += m_velocity * timeElapsed;
+
+    /* pheromone stuff */
+    if( m_lastPheromonePos.x < 0 && m_lastPheromonePos.y < 0 ) // should only happen at the beginning, after leaving the nest for the first time
+    {
+        const float distToNest = ( m_pos - m_nestPos ).mag();
+        if( distToNest > 35 )
+        {
+            m_lastPheromonePos = transformPoint( m_bodyParts[ 3 ].first );
+            pheromones.addPheromone( m_lastPheromonePos, false );
+        }
+    }
+    else
+    {
+        if( ( transformPoint( m_bodyParts[ 3 ].first ) - m_lastPheromonePos ).mag() > m_distPheremones )
+        {
+            m_lastPheromonePos = transformPoint( m_bodyParts[ 3 ].first );
+            if( eStatus::_FOOD_COLLECTED != m_status )
+            {
+                pheromones.addPheromone( m_lastPheromonePos, false );
+            }
+            else
+            {
+                pheromones.addPheromone( m_lastPheromonePos, true );
+            }
+        }
+    }
     
     /* Animation */
     m_timeNextMotion += timeElapsed * m_velocity.mag();

@@ -15,7 +15,7 @@ bool AntColonyOptimization::OnUserCreate()
 
     m_nestPos = olc::vf2d( ScreenWidth() / 2.0f , ScreenHeight() / 2.0f );
     
-    m_pheromoneMap = PheromoneMap();
+    //m_pheromoneMap = PheromoneMap();
     reset( true );
 
     return true;
@@ -35,7 +35,7 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
     /* test */
     if( GetKey( olc::Key::F ).bPressed )
     {
-        m_pheromoneMap.addPheromone( olc::vf2d( ( float )GetMouseX(), ( float )GetMouseY() ), true );
+        m_pheromones.addPheromone( olc::vf2d( ( float )GetMouseX(), ( float )GetMouseY() ), true );
     }
 
     /* left mouse click -> add food */
@@ -56,10 +56,10 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
 
     for( auto &a : m_vAnts )
     {
-        a.update( *this, timeElapsed );
+        a.update( m_pheromones, timeElapsed );
     }
 
-    m_pheromoneMap.update( timeElapsed );
+    m_pheromones.update( timeElapsed );
 
     composeFrame();
     return true;
@@ -69,7 +69,7 @@ void AntColonyOptimization::composeFrame()
 {
     Clear( olc::Pixel( 184, 134, 11 ) );
 
-    m_pheromoneMap.draw( *this );
+    m_pheromones.draw( *this );
 
     FillCircle( m_nestPos, 20, olc::Pixel( 139, 69, 19 ) );
 
@@ -88,7 +88,7 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
 {
     m_vFood.clear();
     m_vAnts.clear();
-    m_pheromoneMap.reset();
+    m_pheromones.reset();
 
     const float width   = ( float )ScreenWidth();
     const float height  = ( float )ScreenHeight();
@@ -100,11 +100,11 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
     }
     else
     {
-        for( int i = 0; i < 2500; ++i )
+        for( int i = 0; i < 300; ++i )
         {
             //Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20, m_vFood, m_nestPos, width, height );
             //Ant ant( olc::vf2d( width / 2, height / 2 ), 20, m_vFood, m_nestPos, width, height );
-            Ant ant( m_nestPos + olc::vf2d( ( float )( -20 + rand() % 40 ), ( float )( -20 + rand() % 40 ) ), 15, m_vFood, m_nestPos, width, height );
+            Ant ant( m_nestPos + olc::vf2d( ( float )( -20 + rand() % 40 ), ( float )( -20 + rand() % 40 ) ), 20, m_vFood, m_nestPos, width, height );
             m_vAnts.push_back( ant );
         }
     }    

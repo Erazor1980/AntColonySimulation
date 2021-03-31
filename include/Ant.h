@@ -1,5 +1,6 @@
 #pragma once
 #include "olcPixelGameEngine.h"
+#include "Pheromone.h"
 
 class Ant
 {
@@ -7,7 +8,7 @@ public:
     Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight );
 
     void draw( olc::PixelGameEngine& pge ) const;
-    void update( const olc::PixelGameEngine& pge, const float timeElapsed );
+    void update( PheromoneMap& pheromones, const float timeElapsed );
     
     void setNestPos( const olc::vf2d& nestPos );    /* to be able to change it ouside */
 private:
@@ -56,4 +57,8 @@ private:
 
     float m_screenWidth;
     float m_screenHeight;
+
+    /* pheromone stuff */
+    olc::vf2d m_lastPheromonePos;
+    const float m_distPheremones = 3.0f;    /* distance in pixels between 2 pheremones the ant outputs */
 };

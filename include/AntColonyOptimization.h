@@ -1,6 +1,5 @@
 #pragma once
 #include "Ant.h"
-#include "Pheromone.h"
 
 class AntColonyOptimization : public olc::PixelGameEngine
 {
@@ -21,5 +20,5 @@ private:
 
     olc::vf2d m_nestPos;
 
-    PheromoneMap m_pheromoneMap;
+    PheromoneMap m_pheromones;
 };
