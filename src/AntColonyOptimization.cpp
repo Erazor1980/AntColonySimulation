@@ -11,10 +11,12 @@ AntColonyOptimization::AntColonyOptimization()
 bool AntColonyOptimization::OnUserCreate()
 {
     // Called once at the start, so create things here
+    SetPixelMode( olc::Pixel::ALPHA );
 
     m_nestPos = olc::vf2d( ScreenWidth() / 2.0f , ScreenHeight() / 2.0f );
-    m_homePheromoneMap = PheromoneMap( ScreenWidth(), ScreenHeight(), false, 7 );
-    reset();
+    
+    m_pheromoneMap = PheromoneMap();
+    reset( true );
 
     return true;
 }
@@ -28,6 +30,12 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
     if( GetKey( olc::Key::K1 ).bPressed )
     {
         reset( true );
+    }
+
+    /* test */
+    if( GetKey( olc::Key::F ).bPressed )
+    {
+        m_pheromoneMap.addPheromone( olc::vf2d( ( float )GetMouseX(), ( float )GetMouseY() ), true );
     }
 
     /* left mouse click -> add food */
@@ -51,6 +59,8 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
         a.update( *this, timeElapsed );
     }
 
+    m_pheromoneMap.update( timeElapsed );
+
     composeFrame();
     return true;
 }
@@ -59,7 +69,7 @@ void AntColonyOptimization::composeFrame()
 {
     Clear( olc::Pixel( 184, 134, 11 ) );
 
-    m_homePheromoneMap.draw( *this );
+    m_pheromoneMap.draw( *this );
 
     FillCircle( m_nestPos, 20, olc::Pixel( 139, 69, 19 ) );
 
@@ -78,6 +88,8 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
 {
     m_vFood.clear();
     m_vAnts.clear();
+    m_pheromoneMap.reset();
+
     const float width   = ( float )ScreenWidth();
     const float height  = ( float )ScreenHeight();
 

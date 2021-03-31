@@ -3,50 +3,56 @@
 #include <math.h>
 
 
-PheromoneMap::PheromoneMap( const int screenWidth, const int screenHeight, const bool bFoodPheromone, const int gridSize )
+void PheromoneMap::addPheromone( const olc::vf2d& pos, const bool bFoodPheromone )
 {
-    m_screenWidth   = screenWidth;
-    m_screenHeight  = screenHeight;
-    m_gridSize      = gridSize;
-    if( m_gridSize < 5 )
-    {
-        m_gridSize = 5;
-    }
-    if( m_gridSize % 2 == 0 )
-    {
-        m_gridSize++;
-    }
+    Pheromone p;
+    p.m_pos = pos;
+    p.m_lifeTime = 0.0f;
 
     if( bFoodPheromone )
     {
-        m_color = olc::RED;
+        p.m_color = olc::RED;
     }
     else
     {
-        m_color = olc::BLUE;
+        p.m_color = olc::GREEN;
     }
 
-    mp_map = new Pheromone[ m_screenWidth / m_gridSize * m_screenHeight / m_gridSize ];
+    m_vPheromones.push_back( p );
 }
 
-PheromoneMap::~PheromoneMap()
+void PheromoneMap::update( const float timeElapsed )
 {
-    if( mp_map )
+    auto it = m_vPheromones.begin();
+
+    while( it != m_vPheromones.end() )
     {
-        delete[] mp_map;
-        mp_map = nullptr;
+        it->m_lifeTime += timeElapsed;
+        if( it->m_lifeTime > it->m_maxLifeTime )
+        {
+            it = m_vPheromones.erase( it );
+        }
+        else
+        {
+            it++;
+        }
     }
+
 }
 
 void PheromoneMap::draw( olc::PixelGameEngine& pge ) const
 {
-    const int startPx = m_gridSize / 2; /* since grid is quadratic, it applies for x and y direction */
-    for( int y = startPx; y < m_screenHeight; y += m_gridSize )
+
+    for( const auto &p : m_vPheromones )
     {
-        const int rowOffset = y * m_screenWidth;
-        for( int x = startPx; x < m_screenWidth; x += m_gridSize )
-        {
-            pge.FillCircle( olc::vi2d( x, y ), 2, m_color );
-        }
+        const float f = ( p.m_maxLifeTime - p.m_lifeTime ) / p.m_maxLifeTime;
+        const int alpha = std::max( 20, int( f * 255 ) );
+        auto transpColor = olc::Pixel( p.m_color.r, p.m_color.g, p.m_color.b, alpha );
+        pge.FillCircle( p.m_pos, 2, transpColor );
     }
+}
+
+void PheromoneMap::reset()
+{
+    m_vPheromones.clear();
 }

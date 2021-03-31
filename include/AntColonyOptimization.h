@@ -21,5 +21,5 @@ private:
 
     olc::vf2d m_nestPos;
 
-    PheromoneMap m_homePheromoneMap;
+    PheromoneMap m_pheromoneMap;
 };

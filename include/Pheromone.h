@@ -5,27 +5,20 @@ class PheromoneMap
 {
 public:
     PheromoneMap() {}
-    PheromoneMap( const int screenWidth,
-                  const int screenHeight,
-                  const bool bFoodPheromone, /* if false -> home pheromone*/
-                  const int gridSize = 5 /* in pixel, has to be odd */ );
 
-    ~PheromoneMap();
-
+    void addPheromone( const olc::vf2d& pos, const bool bFoodPheromone = false /* if true -> house pheromone */ );
+    void update( const float timeElapsed );
     void draw( olc::PixelGameEngine& pge ) const;
+    void reset();
 private:
     struct Pheromone
     {
-        const float m_maxLifeTime = 10.0; /* in seconds */
+        float m_maxLifeTime = 10.0; /* in seconds */
         float m_lifeTime = 0.0f;
 
+        olc::vf2d m_pos;
+        olc::Pixel m_color; /* red -> food pheromone, blue -> home */
     };
 
-    Pheromone* mp_map;
-
-    int m_screenWidth;
-    int m_screenHeight;
-    int m_gridSize;
-
-    olc::Pixel m_color; /* red -> food pheromone, blue -> home */
+    std::vector< Pheromone > m_vPheromones;
 };
