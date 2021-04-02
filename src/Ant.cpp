@@ -177,11 +177,12 @@ void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, 
         if( ( transformPoint( m_bodyParts[ 0 ].first ) - m_lastPheromonePos ).mag() > m_distPheremones )
         {
             m_lastPheromonePos = transformPoint( m_bodyParts[ 0 ].first );
-            if( eStatus::_SEARCHING == m_status || eStatus::_FOOD_FOUND == m_status )
+            if( eStatus::_SEARCHING == m_status || eStatus::_FOOD_FOUND == m_status ||
+                ( eStatus::_ROTATING == m_status && eStatus::_FOOD_COLLECTED == m_lastStatus ) )
             {
                 pHomePheromones->addPheromone( m_lastPheromonePos );
             }
-            else if( eStatus::_FOOD_COLLECTED == m_status )
+            else if( eStatus::_FOOD_COLLECTED == m_status || ( eStatus::_ROTATING == m_status && eStatus::_FOOD_FOUND == m_lastStatus ) )
             {
                 pFoodPheromones->addPheromone( m_lastPheromonePos );
             }

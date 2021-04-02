@@ -5,42 +5,62 @@
 
 PheromoneMap::PheromoneMap( const int screenWidth, const int screenHeigth, const bool bHomePheromone )
 {
-    m_screenWidth       = ( float )screenWidth;
-    m_screenHeight      = ( float )screenHeigth;
+    m_screenWidth       = screenWidth;
+    m_screenHeight      = screenHeigth;
     m_bHomePheromones   = bHomePheromone;
     reset();
 }
 
 PheromoneMap::~PheromoneMap()
 {
+    if( m_pMap )
+    {
+        delete[] m_pMap;
+        m_pMap = nullptr;
+    }
 }
 
 void PheromoneMap::addPheromone( const olc::vf2d& pos )
 {
-    Pheromone p;
-    p.m_pos = pos;
-    p.m_lifeTime = 0.0f;
+    /* check for position outside screen */
+    if( pos.x < 0 || pos.x >= m_screenWidth || pos.y < 0 || pos.y >= m_screenHeight )
+    {
+        return;
+    }
 
-    m_vPheromones.push_back( p );
+    const int idx = getIdxFromPos( pos );
+
+    /* check if idx is already added */
+    if( std::find( m_vActivePheromonesIndices.begin(), m_vActivePheromonesIndices.end(), idx ) != m_vActivePheromonesIndices.end() )
+    {
+        m_pMap[ idx ].m_lifeTime = 0.0f;
+        return;
+    }
+
+    Pheromone p;
+    p.m_lifeTime = 0.0f;
+    
+    m_pMap[ idx ] = p;
+    m_vActivePheromonesIndices.push_back( idx );
 }
 
 void PheromoneMap::update( const float timeElapsed )
 {
-    auto it = m_vPheromones.begin();
+    auto it = m_vActivePheromonesIndices.begin();
 
-    while( it != m_vPheromones.end() )
+    while( it != m_vActivePheromonesIndices.end() )
     {
-        it->m_lifeTime += timeElapsed;
-        if( it->m_lifeTime > it->m_maxLifeTime )
+        Pheromone& p = m_pMap[ *it ];
+        p.m_lifeTime += timeElapsed;
+        if( p.m_lifeTime > p.m_maxLifeTime )
         {
-            it = m_vPheromones.erase( it );
+            it = m_vActivePheromonesIndices.erase( it );
         }
         else
         {
             it++;
         }
     }
-
 }
 
 void PheromoneMap::draw( olc::PixelGameEngine& pge ) const
@@ -56,12 +76,13 @@ void PheromoneMap::draw( olc::PixelGameEngine& pge ) const
     }
 
 
-    for( const auto &p : m_vPheromones )
+    for( const auto &idx : m_vActivePheromonesIndices )
     {
+        Pheromone& p = m_pMap[ idx ];
         const float f = ( p.m_maxLifeTime - p.m_lifeTime ) / p.m_maxLifeTime;
         const int alpha = std::max( 20, int( f * 255 ) );
         auto transpColor = olc::Pixel( color.r, color.g, color.b, alpha );
-        pge.FillCircle( p.m_pos, 1, transpColor );
+        pge.FillCircle( getPosFromIdx( idx ), 1, transpColor );
     }
 }
 
@@ -73,7 +94,22 @@ void PheromoneMap::reset()
         m_pMap = nullptr;
     }
 
-    m_pMap = new Pheromone[ ( int )m_screenWidth * ( int )m_screenHeight ];
+    m_pMap = new Pheromone[ m_screenWidth * m_screenHeight ];
 
-    m_vPheromones.clear();
+    m_vActivePheromonesIndices.clear();
+}
+
+olc::vf2d PheromoneMap::getPosFromIdx( const int idx ) const
+{
+    return olc::vf2d( ( float )( idx % m_screenWidth ), ( float )( idx / m_screenWidth ) );
+}
+
+int PheromoneMap::getIdxFromPos( const int x, const int y ) const
+{
+    return y * m_screenWidth + x;
+}
+
+int PheromoneMap::getIdxFromPos( const olc::vf2d& pnt ) const
+{
+    return getIdxFromPos( ( int )pnt.x, ( int )pnt.y );
 }
