@@ -13,6 +13,20 @@ AntColonyOptimization::AntColonyOptimization()
     sAppName = "AntColonyOptimization";
 }
 
+AntColonyOptimization::~AntColonyOptimization()
+{
+    if( m_pHomePheromones )
+    {
+        delete m_pHomePheromones;
+        m_pHomePheromones = nullptr;
+    }
+    if( m_pHomePheromones )
+    {
+        delete m_pHomePheromones;
+        m_pHomePheromones = nullptr;
+    }
+}
+
 bool AntColonyOptimization::OnUserCreate()
 {
     // Called once at the start, so create things here
@@ -20,6 +34,8 @@ bool AntColonyOptimization::OnUserCreate()
 
     m_nestPos = olc::vf2d( ScreenWidth() / 2.0f , ScreenHeight() / 2.0f );
     
+    m_pHomePheromones = new PheromoneMap( ScreenWidth(), ScreenHeight(), true );
+    m_pFoodPheromones = new PheromoneMap( ScreenWidth(), ScreenHeight(), false );
     //m_pheromoneMap = PheromoneMap();
     reset( true );
 
@@ -44,7 +60,7 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
     /* test */
     if( GetKey( olc::Key::F ).bPressed )
     {
-        m_pheromones.addPheromone( olc::vf2d( ( float )GetMouseX(), ( float )GetMouseY() ), true );
+        m_pHomePheromones->addPheromone( olc::vf2d( ( float )GetMouseX(), ( float )GetMouseY() ) );
     }
 
     /* left mouse click -> add food */
@@ -68,7 +84,7 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
 #endif
     for( auto &a : m_vAnts )
     {
-        a.update( m_pheromones, timeElapsed );
+        a.update( m_pHomePheromones, m_pFoodPheromones, timeElapsed );
     }
 #if MEASURE_EXECUTION_TIMES
     auto finishUpdateAnts = std::chrono::high_resolution_clock::now();
@@ -79,7 +95,8 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
 #if MEASURE_EXECUTION_TIMES
     auto startUpdatePheromones = std::chrono::high_resolution_clock::now();
 #endif
-    m_pheromones.update( timeElapsed );
+    m_pHomePheromones->update( timeElapsed );
+    m_pFoodPheromones->update( timeElapsed );
 #if MEASURE_EXECUTION_TIMES
     auto finishUpdatePheromones = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsedUpdatePheromones = finishUpdatePheromones - startUpdatePheromones;
@@ -109,7 +126,8 @@ void AntColonyOptimization::composeFrame()
 {
     Clear( olc::Pixel( 184, 134, 11 ) );
 
-    m_pheromones.draw( *this );
+    m_pHomePheromones->draw( *this );
+    m_pFoodPheromones->draw( *this );
 
     FillCircle( m_nestPos, 20, olc::Pixel( 139, 69, 19 ) );
 
@@ -128,7 +146,8 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
 {
     m_vFood.clear();
     m_vAnts.clear();
-    m_pheromones.reset();
+    m_pHomePheromones->reset();
+    m_pFoodPheromones->reset();
 
     const float width   = ( float )ScreenWidth();
     const float height  = ( float )ScreenHeight();

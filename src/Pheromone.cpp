@@ -3,20 +3,23 @@
 #include <math.h>
 
 
-void PheromoneMap::addPheromone( const olc::vf2d& pos, const bool bFoodPheromone )
+PheromoneMap::PheromoneMap( const int screenWidth, const int screenHeigth, const bool bHomePheromone )
+{
+    m_screenWidth       = ( float )screenWidth;
+    m_screenHeight      = ( float )screenHeigth;
+    m_bHomePheromones   = bHomePheromone;
+    reset();
+}
+
+PheromoneMap::~PheromoneMap()
+{
+}
+
+void PheromoneMap::addPheromone( const olc::vf2d& pos )
 {
     Pheromone p;
     p.m_pos = pos;
     p.m_lifeTime = 0.0f;
-
-    if( bFoodPheromone )
-    {
-        p.m_color = olc::RED;
-    }
-    else
-    {
-        p.m_color = olc::BLUE;
-    }
 
     m_vPheromones.push_back( p );
 }
@@ -42,17 +45,35 @@ void PheromoneMap::update( const float timeElapsed )
 
 void PheromoneMap::draw( olc::PixelGameEngine& pge ) const
 {
+    olc::Pixel color;
+    if( m_bHomePheromones )
+    {
+        color = olc::BLUE;
+    }
+    else
+    {
+        color = olc::RED;
+    }
+
 
     for( const auto &p : m_vPheromones )
     {
         const float f = ( p.m_maxLifeTime - p.m_lifeTime ) / p.m_maxLifeTime;
         const int alpha = std::max( 20, int( f * 255 ) );
-        auto transpColor = olc::Pixel( p.m_color.r, p.m_color.g, p.m_color.b, alpha );
+        auto transpColor = olc::Pixel( color.r, color.g, color.b, alpha );
         pge.FillCircle( p.m_pos, 1, transpColor );
     }
 }
 
 void PheromoneMap::reset()
 {
+    if( m_pMap )
+    {
+        delete[] m_pMap;
+        m_pMap = nullptr;
+    }
+
+    m_pMap = new Pheromone[ ( int )m_screenWidth * ( int )m_screenHeight ];
+
     m_vPheromones.clear();
 }

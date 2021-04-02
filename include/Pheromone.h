@@ -4,9 +4,10 @@
 class PheromoneMap
 {
 public:
-    PheromoneMap() {}
+    PheromoneMap( const int screenWidth, const int screenHeigth, const bool bHomePheromone = true /* if true -> home pheromone, if false -> food pheromone */ );
+    ~PheromoneMap();
 
-    void addPheromone( const olc::vf2d& pos, const bool bFoodPheromone = false /* if true -> house pheromone */ );
+    void addPheromone( const olc::vf2d& pos );
     void update( const float timeElapsed );
     void draw( olc::PixelGameEngine& pge ) const;
     void reset();
@@ -17,8 +18,13 @@ private:
         float m_lifeTime = 0.0f;
 
         olc::vf2d m_pos;
-        olc::Pixel m_color; /* red -> food pheromone, blue -> home */
     };
+
+    Pheromone* m_pMap = nullptr;
+    float m_screenWidth;
+    float m_screenHeight;
+
+    bool m_bHomePheromones; /* if true -> home pheromone (blue), if false -> food pheromone (red) */
 
     std::vector< Pheromone > m_vPheromones;
 };

@@ -5,7 +5,7 @@ class AntColonyOptimization : public olc::PixelGameEngine
 {
 public:
     AntColonyOptimization();
-
+    ~AntColonyOptimization();
 public:
     bool OnUserCreate() override;
     bool OnUserUpdate( float timeElapsed ) override;
@@ -20,5 +20,6 @@ private:
 
     olc::vf2d m_nestPos;
 
-    PheromoneMap m_pheromones;
+    PheromoneMap* m_pHomePheromones = nullptr;
+    PheromoneMap* m_pFoodPheromones = nullptr;
 };

@@ -8,7 +8,7 @@ public:
     Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight );
 
     void draw( olc::PixelGameEngine& pge ) const;
-    void update( PheromoneMap& pheromones, const float timeElapsed );
+    void update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, const float timeElapsed );
     
     void setNestPos( const olc::vf2d& nestPos );    /* to be able to change it ouside */
 private:

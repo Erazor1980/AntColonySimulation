@@ -152,7 +152,7 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
 #endif
 }
 
-void Ant::update( PheromoneMap& pheromones, const float timeElapsed )
+void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, const float timeElapsed )
 {
     walk( timeElapsed );
     
@@ -165,7 +165,7 @@ void Ant::update( PheromoneMap& pheromones, const float timeElapsed )
         if( distToNest > 35 )
         {
             m_lastPheromonePos = transformPoint( m_bodyParts[ 3 ].first );
-            pheromones.addPheromone( m_lastPheromonePos, false );
+            pHomePheromones->addPheromone( m_lastPheromonePos );
         }
     }
     else
@@ -175,11 +175,11 @@ void Ant::update( PheromoneMap& pheromones, const float timeElapsed )
             m_lastPheromonePos = transformPoint( m_bodyParts[ 3 ].first );
             if( eStatus::_FOOD_COLLECTED != m_status )
             {
-                pheromones.addPheromone( m_lastPheromonePos, false );
+                pHomePheromones->addPheromone( m_lastPheromonePos );
             }
             else
             {
-                pheromones.addPheromone( m_lastPheromonePos, true );
+                pFoodPheromones->addPheromone( m_lastPheromonePos );
             }
         }
     }
