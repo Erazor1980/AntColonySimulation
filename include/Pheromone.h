@@ -16,7 +16,7 @@ public:
 private:
     struct Pheromone
     {
-        float m_maxLifeTime = 10.0; /* in seconds */
+        float m_maxLifeTime = 15.0; /* in seconds */
         float m_lifeTime = 0.0f;
         bool m_bActive = false;
     };

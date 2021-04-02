@@ -392,8 +392,9 @@ void Ant::walk( const float timeElapsed )
     }
     if( eStatus::_FOOD_COLLECTED == m_status )
     {
-        /* brought food home */
-        if( ( m_nestPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag() < m_size / 2.0f )
+        const float distToHome = ( m_nestPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag();
+        
+        if( distToHome < m_size / 2.0f )        /* close enough to deliver food */
         {
             /* flip the desired direction and rotate by a bit (5°) */
             m_desiredDirection  = -m_desiredDirection;
@@ -408,12 +409,23 @@ void Ant::walk( const float timeElapsed )
             m_status            = eStatus::_ROTATING;
             m_lastStatus        = eStatus::_FOOD_COLLECTED;
         }
-        else
+        else   /* searching for home */
         {
-            scanForPheromones();
-            steerStrength       = 3.5f;
-            m_desiredDirection  = ( m_nestPos - m_pos ).norm();
-            m_currSpeed         = m_maxSpeed * 0.75f;
+            if( distToHome < m_viewingRadius )  /* close enought to see home, so we go directly there */
+            {
+                steerStrength = 3.5f;
+                m_desiredDirection = ( m_nestPos - m_pos ).norm();
+                m_currSpeed = m_maxSpeed * 0.75f;
+            }                
+            else if( true == scanForPheromones() )  /* try to follow home pheromones */
+            {
+                m_currSpeed = m_maxSpeed * 0.7f;
+                steerStrength = 3.5f;
+            }
+            else
+            {
+                randomDirection();
+            }
         }
     }
 
@@ -516,23 +528,42 @@ bool Ant::scanForPheromones()
 
     const float radius = m_viewingRadius / 8.0f;
 
-    const float pheromoneValueCenter    = m_pHomePheromones->getPheromonesValue( pntCenter, radius );
-    const float pheromoneValueLeft      = m_pHomePheromones->getPheromonesValue( pntLeft, radius );
-    const float pheromoneValueRight     = m_pHomePheromones->getPheromonesValue( pntRight, radius );
+    float pheromoneValueCenter  = 0.0f;
+    float pheromoneValueLeft    = 0.0f;
+    float pheromoneValueRight   = 0.0f;
+    if( eStatus::_FOOD_COLLECTED == m_status )
+    {
+        pheromoneValueCenter    = m_pHomePheromones->getPheromonesValue( pntCenter, radius );
+        pheromoneValueLeft      = m_pHomePheromones->getPheromonesValue( pntLeft, radius );
+        pheromoneValueRight     = m_pHomePheromones->getPheromonesValue( pntRight, radius );
+    }
+    else if( eStatus::_SEARCHING == m_status )
+    {
+        pheromoneValueCenter    = m_pFoodPheromones->getPheromonesValue( pntCenter, radius );
+        pheromoneValueLeft      = m_pFoodPheromones->getPheromonesValue( pntLeft, radius );
+        pheromoneValueRight     = m_pFoodPheromones->getPheromonesValue( pntRight, radius );
+    }
+
 
     if( pheromoneValueCenter > std::max( pheromoneValueLeft, pheromoneValueRight ) )
     {
-        printf( "Center highest: %0.2f\n", pheromoneValueCenter );
+        m_desiredDirection = ( pntCenter - m_pos ).norm();
+        //printf( "Center highest: %0.2f\n", pheromoneValueCenter );
+        return true;
     }
     else if( pheromoneValueLeft > pheromoneValueRight )
     {
-        printf( "Left highest: %0.2f\n", pheromoneValueLeft );
+        m_desiredDirection = ( pntLeft - m_pos ).norm();
+        //printf( "Left highest: %0.2f\n", pheromoneValueLeft );
+        return true;
     }
     else if( pheromoneValueRight > pheromoneValueLeft )
     {
-        printf( "Right highest: %0.2f\n", pheromoneValueRight );
+        m_desiredDirection = ( pntRight - m_pos ).norm();
+        //printf( "Right highest: %0.2f\n", pheromoneValueRight );
+        return true;
     }
-    //printf( "Center: %0.2f\n", pheromoneValueCenter );
+    
 
 
     return false;

@@ -1,6 +1,6 @@
 #include "AntColonyOptimization.h"
 
-#define MEASURE_EXECUTION_TIMES 1
+#define MEASURE_EXECUTION_TIMES 0
 
 #if MEASURE_EXECUTION_TIMES
 #include <chrono>  // for high_resolution_clock
@@ -175,7 +175,7 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
     }
     else
     {
-        for( int i = 0; i < 200; ++i )
+        for( int i = 0; i < 50; ++i )
         {
             //Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20, m_vFood, m_nestPos, width, height );
             //Ant ant( olc::vf2d( width / 2, height / 2 ), 20, m_vFood, m_nestPos, width, height );
