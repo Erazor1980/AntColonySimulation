@@ -5,10 +5,11 @@
 class Ant
 {
 public:
-    Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight );
+    Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight,
+         PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones );
 
     void draw( olc::PixelGameEngine& pge ) const;
-    void update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, const float timeElapsed );
+    void update( const float timeElapsed );
     
     void setNestPos( const olc::vf2d& nestPos );    /* to be able to change it ouside */
 private:
@@ -30,6 +31,7 @@ private:
     void updateMotion();
     void walk( const float timeElapsed );
     void randomDirection(); // change desired direction to random direction
+    bool scanForPheromones(); // returns true, if desired direction has been updated
     bool checkForFood( olc::vf2d& foodPos ) const;
     bool pickUpFood();  // if false is returned, someone else already picked it up!
 
@@ -63,5 +65,7 @@ private:
 
     /* pheromone stuff */
     olc::vf2d m_lastPheromonePos;
-    const float m_distPheremones = 5.0f;    /* distance in pixels between 2 pheremones the ant outputs */
+    const float m_distPheremonesSquared = 25.0f;    /* squared distance in pixels between 2 pheremones the ant outputs */
+    PheromoneMap* m_pHomePheromones = nullptr;
+    PheromoneMap* m_pFoodPheromones = nullptr;
 };

@@ -22,4 +22,7 @@ private:
 
     PheromoneMap* m_pHomePheromones = nullptr;
     PheromoneMap* m_pFoodPheromones = nullptr;
+
+    const float m_updateIntervalPheromones = 0.5f;  // in seconds
+    float m_timeSinceLastPheromonesUpdate = 0.0f;
 };

@@ -4,12 +4,15 @@
 
 #define DEBUG_INFO 0
 
-Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight )
+Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight,
+          PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones )
     : 
     m_vFood( vFood ),
     m_nestPos( nestPos ),
     m_screenWidth( screenWidth ),
-    m_screenHeight( screenHeight )
+    m_screenHeight( screenHeight ),
+    m_pHomePheromones( pHomePheromones ),
+    m_pFoodPheromones( pFoodPheromones )
 {
     init( position, size );
 }
@@ -154,9 +157,34 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
     auto desDirPnt = m_desiredDirection.norm() * 2 * m_size + transformPoint( m_bodyParts[ 0 ].first );
     pge.DrawLine( transformPoint( m_bodyParts[ 0 ].first ), desDirPnt, olc::WHITE );
 #endif
+        
+#if DEBUG_INFO 
+    /* pheromones scanning */
+    {
+        const auto headPos = transformPoint( m_bodyParts[ 0 ].first );;
+        const float angle = atan2f( m_velocity.y, m_velocity.x );
+        const float leftAngle = angle - m_viewingAngle / 2.5f;
+        const float rightAngle = angle + m_viewingAngle / 2.5f;
+
+        olc::vf2d pntLeft;
+        olc::vf2d pntRight;
+        olc::vf2d pntCenter;
+        pntLeft.x = cosf( leftAngle );
+        pntLeft.y = sinf( leftAngle );
+        pntRight.x = cosf( rightAngle );
+        pntRight.y = sinf( rightAngle );
+        pntLeft = ( pntLeft.norm() * m_viewingRadius / 3 ) + headPos;
+        pntRight = ( pntRight.norm() * m_viewingRadius / 3 ) + headPos;
+        pntCenter = ( m_velocity.norm() * m_viewingRadius / 3 ) + headPos;
+        const int radius = ( int )m_viewingRadius / 8;
+        pge.DrawCircle( pntLeft, radius );
+        pge.DrawCircle( pntRight, radius );
+        pge.DrawCircle( pntCenter, radius );
+    }
+#endif
 }
 
-void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, const float timeElapsed )
+void Ant::update( const float timeElapsed )
 {
     walk( timeElapsed );
     
@@ -170,22 +198,22 @@ void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, 
         if( distToNest > 5 )
         {
             m_lastPheromonePos = pheromonePos;
-            pHomePheromones->addPheromone( m_lastPheromonePos );
+            m_pHomePheromones->addPheromone( m_lastPheromonePos );
         }
     }
     else
     {
-        if( ( pheromonePos - m_lastPheromonePos ).mag() > m_distPheremones )
+        if( ( pheromonePos - m_lastPheromonePos ).mag2() > m_distPheremonesSquared )
         {
             m_lastPheromonePos = pheromonePos;
             if( eStatus::_SEARCHING == m_status || eStatus::_FOOD_FOUND == m_status ||
                 ( eStatus::_ROTATING == m_status && eStatus::_FOOD_COLLECTED == m_lastStatus ) )
             {
-                pHomePheromones->addPheromone( m_lastPheromonePos );
+                m_pHomePheromones->addPheromone( m_lastPheromonePos );
             }
             else if( eStatus::_FOOD_COLLECTED == m_status || ( eStatus::_ROTATING == m_status && eStatus::_FOOD_FOUND == m_lastStatus ) )
             {
-                pFoodPheromones->addPheromone( m_lastPheromonePos );
+                m_pFoodPheromones->addPheromone( m_lastPheromonePos );
             }
         }
     }
@@ -382,6 +410,7 @@ void Ant::walk( const float timeElapsed )
         }
         else
         {
+            scanForPheromones();
             steerStrength       = 3.5f;
             m_desiredDirection  = ( m_nestPos - m_pos ).norm();
             m_currSpeed         = m_maxSpeed * 0.75f;
@@ -467,8 +496,45 @@ void Ant::randomDirection()
     m_currSpeed = m_maxSpeed * 0.7f;
 }
 
-bool Ant::scanForPheromones( PheromoneMap * pHomePheromones, PheromoneMap * pFoodPheromones )
+bool Ant::scanForPheromones()
 {
+    const auto headPos = transformPoint( m_bodyParts[ 0 ].first );;
+    const float angle = atan2f( m_velocity.y, m_velocity.x );
+    const float leftAngle = angle - m_viewingAngle / 2.5f;
+    const float rightAngle = angle + m_viewingAngle / 2.5f;
+
+    olc::vf2d pntLeft;
+    olc::vf2d pntRight;
+    olc::vf2d pntCenter;
+    pntLeft.x = cosf( leftAngle );
+    pntLeft.y = sinf( leftAngle );
+    pntRight.x = cosf( rightAngle );
+    pntRight.y = sinf( rightAngle );
+    pntLeft = ( pntLeft.norm() * m_viewingRadius / 3 ) + headPos;
+    pntRight = ( pntRight.norm() * m_viewingRadius / 3 ) + headPos;
+    pntCenter = ( m_velocity.norm() * m_viewingRadius / 3 ) + headPos;
+
+    const float radius = m_viewingRadius / 8.0f;
+
+    const float pheromoneValueCenter    = m_pHomePheromones->getPheromonesValue( pntCenter, radius );
+    const float pheromoneValueLeft      = m_pHomePheromones->getPheromonesValue( pntLeft, radius );
+    const float pheromoneValueRight     = m_pHomePheromones->getPheromonesValue( pntRight, radius );
+
+    if( pheromoneValueCenter > std::max( pheromoneValueLeft, pheromoneValueRight ) )
+    {
+        printf( "Center highest: %0.2f\n", pheromoneValueCenter );
+    }
+    else if( pheromoneValueLeft > pheromoneValueRight )
+    {
+        printf( "Left highest: %0.2f\n", pheromoneValueLeft );
+    }
+    else if( pheromoneValueRight > pheromoneValueLeft )
+    {
+        printf( "Right highest: %0.2f\n", pheromoneValueRight );
+    }
+    //printf( "Center: %0.2f\n", pheromoneValueCenter );
+
+
     return false;
 }
 

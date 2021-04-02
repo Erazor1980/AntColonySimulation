@@ -39,6 +39,7 @@ void PheromoneMap::addPheromone( const olc::vf2d& pos )
 
     Pheromone p;
     p.m_lifeTime = 0.0f;
+    p.m_bActive = true;
     
     m_pMap[ idx ] = p;
     m_vActivePheromonesIndices.push_back( idx );
@@ -54,6 +55,7 @@ void PheromoneMap::update( const float timeElapsed )
         p.m_lifeTime += timeElapsed;
         if( p.m_lifeTime > p.m_maxLifeTime )
         {
+            p.m_bActive = false;
             it = m_vActivePheromonesIndices.erase( it );
         }
         else
@@ -112,4 +114,34 @@ int PheromoneMap::getIdxFromPos( const int x, const int y ) const
 int PheromoneMap::getIdxFromPos( const olc::vf2d& pnt ) const
 {
     return getIdxFromPos( ( int )pnt.x, ( int )pnt.y );
+}
+
+float PheromoneMap::getPheromonesValue( const olc::vf2d& pos, const float radius )
+{
+    const float radSqrd = radius * radius;
+    float value = 0.0f;
+
+    /* go through all pixels within the circle at 'pos' with radius 'radius' */
+    /* using bounding rectangle and distance 'pos' to current pixel (x,y) */
+    for( int x = ( int )( pos.x - radius ); x <= ( int )( pos.x + radius ); ++x )
+    {
+        for( int y = ( int )( pos.y - radius ); y <= ( int )( pos.y + radius ); ++y )
+        {
+            /* check for position outside screen */
+            if( x < 0 || x >= m_screenWidth || y < 0 || y >= m_screenHeight )
+            {
+                continue;
+            }
+            if( ( olc::vf2d( x, y ) - pos ).mag2() <= radSqrd ) /* we are within the circle */
+            {
+                const auto p = m_pMap[ getIdxFromPos( x, y ) ];
+                if( p.m_bActive )
+                {
+                    value += ( p.m_maxLifeTime - p.m_lifeTime );
+                }
+            }
+        }
+    }
+
+    return value;
 }
