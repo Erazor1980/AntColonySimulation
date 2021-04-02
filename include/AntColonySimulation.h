@@ -1,11 +1,11 @@
 #pragma once
 #include "Ant.h"
 
-class AntColonyOptimization : public olc::PixelGameEngine
+class AntColonySimulation : public olc::PixelGameEngine
 {
 public:
-    AntColonyOptimization();
-    ~AntColonyOptimization();
+    AntColonySimulation();
+    ~AntColonySimulation();
 public:
     bool OnUserCreate() override;
     bool OnUserUpdate( float timeElapsed ) override;

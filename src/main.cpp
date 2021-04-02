@@ -1,10 +1,10 @@
 #define OLC_PGE_APPLICATION
-#include "AntColonyOptimization.h"
+#include "AntColonySimulation.h"
 
 int main()
 {
-    AntColonyOptimization game;
-    if( game.Construct( 1400, 840, 1, 1 ) )
-        game.Start();
+    AntColonySimulation antSim;
+    if( antSim.Construct( 1400, 840, 1, 1 ) )
+        antSim.Start();
     return 0;
 }

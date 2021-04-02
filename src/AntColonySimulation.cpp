@@ -1,19 +1,19 @@
-#include "AntColonyOptimization.h"
+#include "AntColonySimulation.h"
 
 #define MEASURE_EXECUTION_TIMES 0
 
 #if MEASURE_EXECUTION_TIMES
 #include <chrono>  // for high_resolution_clock
 #endif
-AntColonyOptimization::AntColonyOptimization()
+AntColonySimulation::AntColonySimulation()
 {
     /* initialize random seed */
     srand( unsigned int( time( NULL ) ) );
 
-    sAppName = "AntColonyOptimization";
+    sAppName = "Ant Colony Simulation";
 }
 
-AntColonyOptimization::~AntColonyOptimization()
+AntColonySimulation::~AntColonySimulation()
 {
     if( m_pHomePheromones )
     {
@@ -27,7 +27,7 @@ AntColonyOptimization::~AntColonyOptimization()
     }
 }
 
-bool AntColonyOptimization::OnUserCreate()
+bool AntColonySimulation::OnUserCreate()
 {
     // Called once at the start, so create things here
     SetPixelMode( olc::Pixel::ALPHA );
@@ -42,7 +42,7 @@ bool AntColonyOptimization::OnUserCreate()
     return true;
 }
 
-bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
+bool AntColonySimulation::OnUserUpdate( float timeElapsed )
 {
 #if MEASURE_EXECUTION_TIMES
     auto startOnUserUpdate = std::chrono::high_resolution_clock::now();
@@ -135,7 +135,7 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
     return true;
 }
 
-void AntColonyOptimization::composeFrame()
+void AntColonySimulation::composeFrame()
 {
     Clear( olc::Pixel( 184, 134, 11 ) );
 
@@ -158,7 +158,7 @@ void AntColonyOptimization::composeFrame()
     }
 }
 
-void AntColonyOptimization::reset( const bool bOnlyOneAnt )
+void AntColonySimulation::reset( const bool bOnlyOneAnt )
 {
     m_vFood.clear();
     m_vAnts.clear();

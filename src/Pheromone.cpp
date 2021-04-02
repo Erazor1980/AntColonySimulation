@@ -132,7 +132,7 @@ float PheromoneMap::getPheromonesValue( const olc::vf2d& pos, const float radius
             {
                 continue;
             }
-            if( ( olc::vf2d( x, y ) - pos ).mag2() <= radSqrd ) /* we are within the circle */
+            if( ( olc::vf2d( ( float )x, ( float )y ) - pos ).mag2() <= radSqrd ) /* we are within the circle */
             {
                 const auto p = m_pMap[ getIdxFromPos( x, y ) ];
                 if( p.m_bActive )
