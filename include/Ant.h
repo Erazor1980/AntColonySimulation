@@ -28,7 +28,8 @@ private:
     void init( const olc::vf2d position, const float size );
     olc::vf2d transformPoint( const olc::vf2d& point ) const; // rotates and translates given point (based on m_pos and m_angle)
     void updateMotion();
-    void walk( const float timeElapsed );  // running in random direction, searching for food
+    void walk( const float timeElapsed );
+    void randomDirection(); // change desired direction to random direction
     bool checkForFood( olc::vf2d& foodPos ) const;
     bool pickUpFood();  // if false is returned, someone else already picked it up!
 

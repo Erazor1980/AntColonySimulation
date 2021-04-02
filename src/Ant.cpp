@@ -163,20 +163,21 @@ void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, 
     m_pos += m_velocity * timeElapsed;
 
     /* pheromone stuff */
+    const auto pheromonePos = transformPoint( m_bodyParts[ 0 ].first );
     if( m_lastPheromonePos.x < 0 && m_lastPheromonePos.y < 0 ) // should only happen at the beginning, after leaving the nest for the first time
     {
         const float distToNest = ( m_pos - m_nestPos ).mag();
         if( distToNest > 5 )
         {
-            m_lastPheromonePos = transformPoint( m_bodyParts[ 0 ].first );
+            m_lastPheromonePos = pheromonePos;
             pHomePheromones->addPheromone( m_lastPheromonePos );
         }
     }
     else
     {
-        if( ( transformPoint( m_bodyParts[ 0 ].first ) - m_lastPheromonePos ).mag() > m_distPheremones )
+        if( ( pheromonePos - m_lastPheromonePos ).mag() > m_distPheremones )
         {
-            m_lastPheromonePos = transformPoint( m_bodyParts[ 0 ].first );
+            m_lastPheromonePos = pheromonePos;
             if( eStatus::_SEARCHING == m_status || eStatus::_FOOD_FOUND == m_status ||
                 ( eStatus::_ROTATING == m_status && eStatus::_FOOD_COLLECTED == m_lastStatus ) )
             {
@@ -321,13 +322,7 @@ void Ant::walk( const float timeElapsed )
     
     if( eStatus::_SEARCHING == m_status )
     {
-        const float wanderStrength = 0.17f;
-        const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
-        olc::vf2d rndPntUnitCircle;
-        rndPntUnitCircle.x  = sinf( rndAngle );
-        rndPntUnitCircle.y  = -cosf( rndAngle );
-        m_desiredDirection  = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
-        m_currSpeed         = m_maxSpeed * 0.7f;
+        randomDirection();
 
         if( true == checkForFood( m_targetFoodPos ) )
         {
@@ -459,6 +454,22 @@ void Ant::walk( const float timeElapsed )
     }
 
 
+}
+
+void Ant::randomDirection()
+{
+    const float wanderStrength = 0.17f;
+    const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
+    olc::vf2d rndPntUnitCircle;
+    rndPntUnitCircle.x = sinf( rndAngle );
+    rndPntUnitCircle.y = -cosf( rndAngle );
+    m_desiredDirection = ( m_desiredDirection + rndPntUnitCircle * wanderStrength ).norm();
+    m_currSpeed = m_maxSpeed * 0.7f;
+}
+
+bool Ant::scanForPheromones( PheromoneMap * pHomePheromones, PheromoneMap * pFoodPheromones )
+{
+    return false;
 }
 
 bool Ant::checkForFood( olc::vf2d& foodPos ) const
