@@ -1,5 +1,10 @@
 #include "AntColonyOptimization.h"
 
+#define MEASURE_EXECUTION_TIMES 0
+
+#if MEASURE_EXECUTION_TIMES
+#include <chrono>  // for high_resolution_clock
+#endif
 AntColonyOptimization::AntColonyOptimization()
 {
     /* initialize random seed */
@@ -23,6 +28,10 @@ bool AntColonyOptimization::OnUserCreate()
 
 bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
 {
+#if MEASURE_EXECUTION_TIMES
+    auto startOnUserUpdate = std::chrono::high_resolution_clock::now();
+#endif
+
     if( GetKey( olc::Key::ESCAPE ).bPressed )
     {
         reset();
@@ -61,7 +70,22 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
 
     m_pheromones.update( timeElapsed );
 
+#if MEASURE_EXECUTION_TIMES
+    auto startComposeFrame = std::chrono::high_resolution_clock::now();
+#endif
+
     composeFrame();
+
+#if MEASURE_EXECUTION_TIMES
+    auto finishComposeFrame = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedComposeFrame = finishComposeFrame - startComposeFrame;
+    std::cout << "\tcomposeFrame: " << elapsedComposeFrame.count() << " ms\n";
+
+    auto finishOnUserUpdate = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = finishOnUserUpdate - startOnUserUpdate;
+    std::cout << "Elapsed time (OnUserUpdate): " << elapsed.count() << " ms\n";
+#endif
+
     return true;
 }
 
