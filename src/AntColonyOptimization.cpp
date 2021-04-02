@@ -1,6 +1,6 @@
 #include "AntColonyOptimization.h"
 
-#define MEASURE_EXECUTION_TIMES 0
+#define MEASURE_EXECUTION_TIMES 1
 
 #if MEASURE_EXECUTION_TIMES
 #include <chrono>  // for high_resolution_clock
@@ -63,12 +63,28 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
         }
     }
 
+#if MEASURE_EXECUTION_TIMES
+    auto startUpdateAnts = std::chrono::high_resolution_clock::now();
+#endif
     for( auto &a : m_vAnts )
     {
         a.update( m_pheromones, timeElapsed );
     }
+#if MEASURE_EXECUTION_TIMES
+    auto finishUpdateAnts = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedUpdateAnts = finishUpdateAnts - startUpdateAnts;
+    std::cout << "\tupdate ants:\t\t" << elapsedUpdateAnts.count() << " ms\n";
+#endif
 
+#if MEASURE_EXECUTION_TIMES
+    auto startUpdatePheromones = std::chrono::high_resolution_clock::now();
+#endif
     m_pheromones.update( timeElapsed );
+#if MEASURE_EXECUTION_TIMES
+    auto finishUpdatePheromones = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsedUpdatePheromones = finishUpdatePheromones - startUpdatePheromones;
+    std::cout << "\tupdate pheromones:\t" << elapsedUpdatePheromones.count() << " ms\n";
+#endif
 
 #if MEASURE_EXECUTION_TIMES
     auto startComposeFrame = std::chrono::high_resolution_clock::now();
@@ -79,11 +95,11 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
 #if MEASURE_EXECUTION_TIMES
     auto finishComposeFrame = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsedComposeFrame = finishComposeFrame - startComposeFrame;
-    std::cout << "\tcomposeFrame: " << elapsedComposeFrame.count() << " ms\n";
+    std::cout << "\tcomposeFrame:\t\t" << elapsedComposeFrame.count() << " ms\n";
 
     auto finishOnUserUpdate = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed = finishOnUserUpdate - startOnUserUpdate;
-    std::cout << "Elapsed time (OnUserUpdate): " << elapsed.count() << " ms\n";
+    std::cout << "OnUserUpdate: " << elapsed.count() << " ms\n";
 #endif
 
     return true;
@@ -124,7 +140,7 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
     }
     else
     {
-        for( int i = 0; i < 300; ++i )
+        for( int i = 0; i < 1000; ++i )
         {
             //Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20, m_vFood, m_nestPos, width, height );
             //Ant ant( olc::vf2d( width / 2, height / 2 ), 20, m_vFood, m_nestPos, width, height );
