@@ -96,7 +96,7 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
     }
 
     /* draw food (if picked up) */
-    if( eStatus::_FOOD_COLLECTED == m_status )
+    if( eStatus::_FOOD_COLLECTED == m_status || eStatus::_FOOD_FOUND == m_lastStatus )
     {
         const olc::vf2d pos = ( m_velocity.norm() * m_size / 4.0f ) + transformPoint( m_bodyParts[ 0 ].first );
         pge.FillCircle( pos, 4, olc::GREEN );
@@ -149,6 +149,10 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
     pge.DrawLine( headPos, headPos + m_desiredDirection, olc::DARK_BLUE );
 
     pge.DrawStringDecal( m_pos - olc::vf2d( m_size, -m_size ), "Status: " + std::to_string( m_status ), olc::DARK_GREEN, { 1.5, 1.5 } );
+
+    /* draw desired direction */
+    auto desDirPnt = m_desiredDirection.norm() * 2 * m_size + transformPoint( m_bodyParts[ 0 ].first );
+    pge.DrawLine( transformPoint( m_bodyParts[ 0 ].first ), desDirPnt, olc::WHITE );
 #endif
 }
 
@@ -162,17 +166,17 @@ void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, 
     if( m_lastPheromonePos.x < 0 && m_lastPheromonePos.y < 0 ) // should only happen at the beginning, after leaving the nest for the first time
     {
         const float distToNest = ( m_pos - m_nestPos ).mag();
-        if( distToNest > 35 )
+        if( distToNest > 5 )
         {
-            m_lastPheromonePos = transformPoint( m_bodyParts[ 3 ].first );
+            m_lastPheromonePos = transformPoint( m_bodyParts[ 0 ].first );
             pHomePheromones->addPheromone( m_lastPheromonePos );
         }
     }
     else
     {
-        if( ( transformPoint( m_bodyParts[ 3 ].first ) - m_lastPheromonePos ).mag() > m_distPheremones )
+        if( ( transformPoint( m_bodyParts[ 0 ].first ) - m_lastPheromonePos ).mag() > m_distPheremones )
         {
-            m_lastPheromonePos = transformPoint( m_bodyParts[ 3 ].first );
+            m_lastPheromonePos = transformPoint( m_bodyParts[ 0 ].first );
             if( eStatus::_FOOD_COLLECTED != m_status )
             {
                 pHomePheromones->addPheromone( m_lastPheromonePos );
@@ -185,7 +189,15 @@ void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, 
     }
     
     /* Animation */
-    m_timeNextMotion += timeElapsed * m_velocity.mag();
+    if( eStatus::_ROTATING == m_status )
+    {
+        m_timeNextMotion += timeElapsed * 100;
+    }
+    else
+    {
+        float test = m_velocity.mag();
+        m_timeNextMotion += timeElapsed * m_velocity.mag();
+    }
     if( m_timeNextMotion > 5 )
     {
         m_timeNextMotion = 0.0f;
@@ -329,7 +341,9 @@ void Ant::walk( const float timeElapsed )
         {
             if( true == pickUpFood() )
             {
-                m_status = eStatus::_FOOD_COLLECTED;
+                m_desiredDirection  = -m_desiredDirection;
+                m_status            = eStatus::_ROTATING;
+                m_lastStatus        = eStatus::_FOOD_FOUND;
             }
         }
         else
@@ -341,9 +355,12 @@ void Ant::walk( const float timeElapsed )
     }
     if( eStatus::_FOOD_COLLECTED == m_status )
     {
+        /* brought food home */
         if( ( m_nestPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag() < m_size / 2.0f )
         {
-            m_status = eStatus::_SEARCHING;
+            m_desiredDirection  = -m_desiredDirection;
+            m_status            = eStatus::_ROTATING;
+            m_lastStatus        = eStatus::_FOOD_COLLECTED;
         }
         else
         {
@@ -353,27 +370,56 @@ void Ant::walk( const float timeElapsed )
         }
     }
 
+    if( eStatus::_ROTATING == m_status )
+    {
+        const float currAngle       = atan2f( m_velocity.y, m_velocity.x );
+        const float desiredAngle    = atan2f( m_desiredDirection.y, m_desiredDirection.x );
+        m_velocity = m_velocity.norm();
+
+        if( fabsf( currAngle - desiredAngle ) <= 5 * M_PI / 180.0f )
+        {
+            if( m_lastStatus == eStatus::_FOOD_FOUND )
+            {
+                m_status = eStatus::_FOOD_COLLECTED;
+            }
+            else
+            {
+                m_status = eStatus::_SEARCHING;
+            }            
+        }
+        else
+        {
+            const float angleDelta = 3.5f * timeElapsed;
+            auto oldVel = m_velocity;
+            m_velocity.x = oldVel.x * cosf( angleDelta ) - oldVel.y * sinf( angleDelta );
+            m_velocity.y = oldVel.y * cosf( angleDelta ) + oldVel.x * sinf( angleDelta );
+        }
+        return;
+    }
+
     /* boundary checks */
-    const auto headPos = transformPoint( m_bodyParts[ 0 ].first );
-    if( headPos.x < m_size && m_velocity.x < 0 )
     {
-        m_desiredDirection.x = 100;
-        steerStrength = 5.0f;
-    }
-    else if( headPos.x > m_screenWidth - m_size && m_velocity.x > 0 )
-    {
-        m_desiredDirection.x = -100;
-        steerStrength = 5.0f;
-    }
-    if( headPos.y < m_size && m_velocity.y < 0 )
-    {
-        m_desiredDirection.y = 100;
-        steerStrength = 5.0f;
-    }
-    else if( headPos.y > m_screenHeight - m_size && m_velocity.y > 0 )
-    {
-        m_desiredDirection.y = -100;
-        steerStrength = 5.0f;
+        const auto headPos = transformPoint( m_bodyParts[ 0 ].first );
+        if( headPos.x < m_size && m_velocity.x < 0 )
+        {
+            m_desiredDirection.x = 100;
+            steerStrength = 5.0f;
+        }
+        else if( headPos.x > m_screenWidth - m_size && m_velocity.x > 0 )
+        {
+            m_desiredDirection.x = -100;
+            steerStrength = 5.0f;
+        }
+        if( headPos.y < m_size && m_velocity.y < 0 )
+        {
+            m_desiredDirection.y = 100;
+            steerStrength = 5.0f;
+        }
+        else if( headPos.y > m_screenHeight - m_size && m_velocity.y > 0 )
+        {
+            m_desiredDirection.y = -100;
+            steerStrength = 5.0f;
+        }
     }
 
     olc::vf2d desiredVelocity = m_desiredDirection * m_currSpeed;

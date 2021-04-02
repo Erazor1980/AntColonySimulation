@@ -21,7 +21,8 @@ private:
     {
         _SEARCHING = 0,     /* searching for food */
         _FOOD_FOUND,        /* spotted food, going in its diraction */
-        _FOOD_COLLECTED     /* food collected, on the way back home */
+        _FOOD_COLLECTED,    /* food collected, on the way back home */
+        _ROTATING           /* in place rotation (e.g. after picked up or delivered food */
     };
 
     void init( const olc::vf2d position, const float size );
@@ -44,7 +45,8 @@ private:
     std::vector< olc::vf2d >& m_vFood;
     olc::vf2d m_nestPos;
 
-    eStatus m_status = _SEARCHING;
+    eStatus m_status        = _SEARCHING;
+    eStatus m_lastStatus    = _SEARCHING;   /* used for _ROTATING, to figure out which status follows */
 
     /* body, legs, antennas */
     std::pair< olc::vf2d, float > m_bodyParts[ 4 ]; // 0 = head, 1, 2, 3 ->remaining segments. pair < position, circle radius >
@@ -60,5 +62,5 @@ private:
 
     /* pheromone stuff */
     olc::vf2d m_lastPheromonePos;
-    const float m_distPheremones = 3.0f;    /* distance in pixels between 2 pheremones the ant outputs */
+    const float m_distPheremones = 5.0f;    /* distance in pixels between 2 pheremones the ant outputs */
 };
