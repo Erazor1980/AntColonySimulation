@@ -168,6 +168,7 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
     const float width   = ( float )ScreenWidth();
     const float height  = ( float )ScreenHeight();
 
+    /* random ants */
     if( true == bOnlyOneAnt )
     {
         Ant ant( olc::vf2d( width / 2, height / 2 ), 40, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
@@ -182,5 +183,18 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
             Ant ant( m_nestPos + olc::vf2d( ( float )( -20 + rand() % 40 ), ( float )( -20 + rand() % 40 ) ), 20, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
             m_vAnts.push_back( ant );
         }
-    }    
+    }
+
+    /* food */
+    const olc::vf2d center( 200, 200 );
+    const int radius = 80;
+    for( int i = 0; i < 50; ++i )
+    {
+        const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
+        olc::vf2d rndPntUnitCircle;
+        rndPntUnitCircle.x = sinf( rndAngle );
+        rndPntUnitCircle.y = -cosf( rndAngle );
+
+        m_vFood.push_back( olc::vf2d( rndPntUnitCircle *= rand() % radius ) + center );
+    }
 }

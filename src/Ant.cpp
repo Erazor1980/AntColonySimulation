@@ -21,7 +21,7 @@ void Ant::init( const olc::vf2d position, const float size )
 {
     m_pos           = position;
     m_size          = size;
-    m_maxSpeed      = 100.0f + ( rand() % 50 );
+    m_maxSpeed      = 130.0f + ( rand() % 50 );
     m_currSpeed     = m_maxSpeed * 0.7f;
     m_viewingAngle  = ( float )( 120 * M_PI / 180.0 );
     m_viewingRadius = size * 2.5f;
@@ -350,7 +350,15 @@ void Ant::walk( const float timeElapsed )
     
     if( eStatus::_SEARCHING == m_status )
     {
-        randomDirection();
+        if( true == scanForPheromones() )  /* try to follow food pheromones */
+        {
+            m_currSpeed = m_maxSpeed * 0.7f;
+            steerStrength = 3.5f;
+        }
+        else
+        {
+            randomDirection();
+        }
 
         if( true == checkForFood( m_targetFoodPos ) )
         {
