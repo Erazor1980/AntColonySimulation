@@ -57,10 +57,10 @@ bool AntColonyOptimization::OnUserUpdate( float timeElapsed )
         reset( true );
     }
 
-    /* test */
+    /* enable/disable pheromones drawing */
     if( GetKey( olc::Key::F ).bPressed )
     {
-        m_pHomePheromones->addPheromone( olc::vf2d( ( float )GetMouseX(), ( float )GetMouseY() ) );
+        m_bDrawPheromones = !m_bDrawPheromones;
     }
 
     /* left mouse click -> add food */
@@ -139,18 +139,19 @@ void AntColonyOptimization::composeFrame()
 {
     Clear( olc::Pixel( 184, 134, 11 ) );
 
-    m_pHomePheromones->draw( *this );
-    m_pFoodPheromones->draw( *this );
+    if( true == m_bDrawPheromones )
+    {
+        m_pHomePheromones->draw( *this );
+        m_pFoodPheromones->draw( *this );
+    }
 
     FillCircle( m_nestPos, 20, olc::Pixel( 139, 69, 19 ) );
 
-//#pragma omp parallel for 
     for( const auto &f : m_vFood )
     {
         FillCircle( f, 4, olc::GREEN );
     }
 
-//#pragma omp parallel for 
     for( const auto &a : m_vAnts )
     {
         a.draw( *this );
@@ -171,24 +172,22 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
     /* random ants */
     if( true == bOnlyOneAnt )
     {
-        Ant ant( olc::vf2d( width / 2, height / 2 ), 40, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
+        Ant ant( m_nestPos, 20, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
         m_vAnts.push_back( ant );
     }
     else
     {
-        for( int i = 0; i < 50; ++i )
+        for( int i = 0; i < 200; ++i )
         {
-            //Ant ant( olc::vf2d( ( float )( rand() % ScreenWidth() ), ( float )( rand() % ScreenHeight() ) ), 20, m_vFood, m_nestPos, width, height );
-            //Ant ant( olc::vf2d( width / 2, height / 2 ), 20, m_vFood, m_nestPos, width, height );
             Ant ant( m_nestPos + olc::vf2d( ( float )( -20 + rand() % 40 ), ( float )( -20 + rand() % 40 ) ), 20, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
             m_vAnts.push_back( ant );
         }
     }
 
     /* food */
-    const olc::vf2d center( 200, 200 );
+    const olc::vf2d center( 300, 200 );
     const int radius = 80;
-    for( int i = 0; i < 50; ++i )
+    for( int i = 0; i < 150; ++i )
     {
         const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
         olc::vf2d rndPntUnitCircle;

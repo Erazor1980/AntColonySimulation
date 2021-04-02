@@ -21,12 +21,14 @@ void Ant::init( const olc::vf2d position, const float size )
 {
     m_pos                   = position;
     m_size                  = size;
-    m_maxSpeed              = 110.0f + ( rand() % 50 );
+    m_maxSpeed              = 120.0f + ( rand() % 70 );
     m_currSpeed             = m_maxSpeed * 0.7f;
     m_viewingAngle          = ( float )( 120 * M_PI / 180.0 );
-    m_viewingRadius         = size * 2.5f;
+    m_viewingRadius         = size * 3.5f;
     m_lastPheromonePos      = olc::vf2d( -1.0f, -1.0f );
     m_timeSinceLastHotSpot  = 0.0f;
+    m_scanCircleRadius      = m_viewingRadius / 6.0f;
+    m_scanCircleDist        = m_viewingRadius / 2.0f;
 
     /* default body positions (head top) */
     m_bodyParts[ 0 ].first = { 0, -0.35f * m_size };   /* head */
@@ -174,13 +176,13 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
         pntLeft.y = sinf( leftAngle );
         pntRight.x = cosf( rightAngle );
         pntRight.y = sinf( rightAngle );
-        pntLeft = ( pntLeft.norm() * m_viewingRadius / 3 ) + headPos;
-        pntRight = ( pntRight.norm() * m_viewingRadius / 3 ) + headPos;
-        pntCenter = ( m_velocity.norm() * m_viewingRadius / 3 ) + headPos;
-        const int radius = ( int )m_viewingRadius / 8;
-        pge.DrawCircle( pntLeft, radius );
-        pge.DrawCircle( pntRight, radius );
-        pge.DrawCircle( pntCenter, radius );
+        pntLeft = ( pntLeft.norm() * m_scanCircleDist ) + headPos;
+        pntRight = ( pntRight.norm() * m_scanCircleDist ) + headPos;
+        pntCenter = ( m_velocity.norm() * m_scanCircleDist ) + headPos;
+
+        pge.DrawCircle( pntLeft, ( int )m_scanCircleRadius );
+        pge.DrawCircle( pntRight, ( int )m_scanCircleRadius );
+        pge.DrawCircle( pntCenter, ( int )m_scanCircleRadius );
     }
 #endif
 }
@@ -346,7 +348,7 @@ void Ant::walk( const float timeElapsed )
         if( true == scanForPheromones() )  /* try to follow food pheromones */
         {
             m_currSpeed = m_maxSpeed * 0.7f;
-            steerStrength = 5.0f;
+            steerStrength = 4.0f;
         }
         else
         {
@@ -374,9 +376,9 @@ void Ant::walk( const float timeElapsed )
             if( true == pickUpFood() )
             {
                 /* flip the desired direction and rotate by a bit (5°) */
-                m_desiredDirection  = -m_desiredDirection;
+                //m_desiredDirection  = -m_desiredDirection;
                 auto tmp            = m_desiredDirection;
-                float angleDelta    = 5 * ( float )M_PI / 180.0f;;
+                float angleDelta    = 183 * ( float )M_PI / 180.0f;;
                 if( rand() % 2 )
                 {
                     angleDelta *= -1;
@@ -423,14 +425,14 @@ void Ant::walk( const float timeElapsed )
         {
             if( distToHome < m_viewingRadius )  /* close enought to see home, so we go directly there */
             {
-                steerStrength = 3.5f;
+                steerStrength = 8.5f;
                 m_desiredDirection = ( m_nestPos - m_pos ).norm();
                 m_currSpeed = m_maxSpeed * 0.75f;
             }                
             else if( true == scanForPheromones() )  /* try to follow home pheromones */
             {
                 m_currSpeed = m_maxSpeed * 0.7f;
-                steerStrength = 5.0f;
+                steerStrength = 4.0f;
             }
             else
             {
@@ -532,26 +534,24 @@ bool Ant::scanForPheromones()
     pntLeft.y = sinf( leftAngle );
     pntRight.x = cosf( rightAngle );
     pntRight.y = sinf( rightAngle );
-    pntLeft = ( pntLeft.norm() * m_viewingRadius / 3 ) + headPos;
-    pntRight = ( pntRight.norm() * m_viewingRadius / 3 ) + headPos;
-    pntCenter = ( m_velocity.norm() * m_viewingRadius / 3 ) + headPos;
-
-    const float radius = m_viewingRadius / 8.0f;
+    pntLeft = ( pntLeft.norm() * m_scanCircleDist ) + headPos;
+    pntRight = ( pntRight.norm() * m_scanCircleDist ) + headPos;
+    pntCenter = ( m_velocity.norm() * m_scanCircleDist ) + headPos;
 
     float pheromoneValueCenter  = 0.0f;
     float pheromoneValueLeft    = 0.0f;
     float pheromoneValueRight   = 0.0f;
     if( eStatus::_FOOD_COLLECTED == m_status )
     {
-        pheromoneValueCenter    = m_pHomePheromones->getPheromonesValue( pntCenter, radius );
-        pheromoneValueLeft      = m_pHomePheromones->getPheromonesValue( pntLeft, radius );
-        pheromoneValueRight     = m_pHomePheromones->getPheromonesValue( pntRight, radius );
+        pheromoneValueCenter    = m_pHomePheromones->getPheromonesValue( pntCenter, m_scanCircleRadius );
+        pheromoneValueLeft      = m_pHomePheromones->getPheromonesValue( pntLeft, m_scanCircleRadius );
+        pheromoneValueRight     = m_pHomePheromones->getPheromonesValue( pntRight, m_scanCircleRadius );
     }
     else if( eStatus::_SEARCHING == m_status )
     {
-        pheromoneValueCenter    = m_pFoodPheromones->getPheromonesValue( pntCenter, radius );
-        pheromoneValueLeft      = m_pFoodPheromones->getPheromonesValue( pntLeft, radius );
-        pheromoneValueRight     = m_pFoodPheromones->getPheromonesValue( pntRight, radius );
+        pheromoneValueCenter    = m_pFoodPheromones->getPheromonesValue( pntCenter, m_scanCircleRadius );
+        pheromoneValueLeft      = m_pFoodPheromones->getPheromonesValue( pntLeft, m_scanCircleRadius );
+        pheromoneValueRight     = m_pFoodPheromones->getPheromonesValue( pntRight, m_scanCircleRadius );
     }
 
 

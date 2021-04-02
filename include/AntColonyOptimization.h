@@ -25,4 +25,6 @@ private:
 
     const float m_updateIntervalPheromones = 0.5f;  // in seconds
     float m_timeSinceLastPheromonesUpdate = 0.0f;
+
+    bool m_bDrawPheromones = true;
 };

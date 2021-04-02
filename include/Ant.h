@@ -70,4 +70,6 @@ private:
     PheromoneMap* m_pFoodPheromones = nullptr;
     float m_timeSinceLastHotSpot = 0.0f;            /* time since last time visited home or found food (in seconds) */
     const float m_maxTimePheromones = 20.0f;        /* maximum time (in seconds) since home/food found (if m_timeSinceLastHotSpot is higher, no pheromones will be created) */
+    float m_scanCircleRadius;                       /* radius for each of the 3 circles for pheromone scanning */
+    float m_scanCircleDist;                         /* distance from head to each of the 3 circles for pheromone scanning */
 };
