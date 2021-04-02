@@ -195,6 +195,6 @@ void AntColonyOptimization::reset( const bool bOnlyOneAnt )
         rndPntUnitCircle.x = sinf( rndAngle );
         rndPntUnitCircle.y = -cosf( rndAngle );
 
-        m_vFood.push_back( olc::vf2d( rndPntUnitCircle *= rand() % radius ) + center );
+        m_vFood.push_back( olc::vf2d( rndPntUnitCircle *= ( float )( rand() % radius ) ) + center );
     }
 }

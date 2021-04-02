@@ -19,13 +19,14 @@ Ant::Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& 
 
 void Ant::init( const olc::vf2d position, const float size )
 {
-    m_pos           = position;
-    m_size          = size;
-    m_maxSpeed      = 130.0f + ( rand() % 50 );
-    m_currSpeed     = m_maxSpeed * 0.7f;
-    m_viewingAngle  = ( float )( 120 * M_PI / 180.0 );
-    m_viewingRadius = size * 2.5f;
-    m_lastPheromonePos = olc::vf2d( -1.0f, -1.0f );
+    m_pos                   = position;
+    m_size                  = size;
+    m_maxSpeed              = 110.0f + ( rand() % 50 );
+    m_currSpeed             = m_maxSpeed * 0.7f;
+    m_viewingAngle          = ( float )( 120 * M_PI / 180.0 );
+    m_viewingRadius         = size * 2.5f;
+    m_lastPheromonePos      = olc::vf2d( -1.0f, -1.0f );
+    m_timeSinceLastHotSpot  = 0.0f;
 
     /* default body positions (head top) */
     m_bodyParts[ 0 ].first = { 0, -0.35f * m_size };   /* head */
@@ -191,18 +192,10 @@ void Ant::update( const float timeElapsed )
     m_pos += m_velocity * timeElapsed;
 
     /* pheromone stuff */
-    const auto pheromonePos = transformPoint( m_bodyParts[ 0 ].first );
-    if( m_lastPheromonePos.x < 0 && m_lastPheromonePos.y < 0 ) // should only happen at the beginning, after leaving the nest for the first time
+    m_timeSinceLastHotSpot += timeElapsed;
+    if( m_timeSinceLastHotSpot < m_maxTimePheromones )
     {
-        const float distToNest = ( m_pos - m_nestPos ).mag();
-        if( distToNest > 5 )
-        {
-            m_lastPheromonePos = pheromonePos;
-            m_pHomePheromones->addPheromone( m_lastPheromonePos );
-        }
-    }
-    else
-    {
+        const auto pheromonePos = transformPoint( m_bodyParts[ 0 ].first );
         if( ( pheromonePos - m_lastPheromonePos ).mag2() > m_distPheremonesSquared )
         {
             m_lastPheromonePos = pheromonePos;
@@ -353,7 +346,7 @@ void Ant::walk( const float timeElapsed )
         if( true == scanForPheromones() )  /* try to follow food pheromones */
         {
             m_currSpeed = m_maxSpeed * 0.7f;
-            steerStrength = 3.5f;
+            steerStrength = 5.0f;
         }
         else
         {
@@ -364,6 +357,13 @@ void Ant::walk( const float timeElapsed )
         {
             m_desiredDirection = ( m_targetFoodPos - m_pos ).norm();
             m_status = eStatus::_FOOD_FOUND;
+        }
+
+        /* if we visit home while searching -> reset m_timeSinceLastHotSpot to create pheromones again */
+        const float distToHome = ( m_nestPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag();
+        if( distToHome < 10 )
+        {
+            m_timeSinceLastHotSpot = 0.0f;
         }
     }
     else if( eStatus::_FOOD_FOUND == m_status )
@@ -380,11 +380,12 @@ void Ant::walk( const float timeElapsed )
                 if( rand() % 2 )
                 {
                     angleDelta *= -1;
-                }                
-                m_desiredDirection.x = tmp.x * cosf( angleDelta ) - tmp.y * sinf( angleDelta );
-                m_desiredDirection.y = tmp.y * cosf( angleDelta ) + tmp.x * sinf( angleDelta );
-                m_status            = eStatus::_ROTATING;
-                m_lastStatus        = eStatus::_FOOD_FOUND;
+                }
+                m_desiredDirection.x    = tmp.x * cosf( angleDelta ) - tmp.y * sinf( angleDelta );
+                m_desiredDirection.y    = tmp.y * cosf( angleDelta ) + tmp.x * sinf( angleDelta );
+                m_status                = eStatus::_ROTATING;
+                m_lastStatus            = eStatus::_FOOD_FOUND;
+                m_timeSinceLastHotSpot  = 0.0f;
             }
             else
             {
@@ -412,10 +413,11 @@ void Ant::walk( const float timeElapsed )
             {
                 angleDelta *= -1;
             }
-            m_desiredDirection.x = tmp.x * cosf( angleDelta ) - tmp.y * sinf( angleDelta );
-            m_desiredDirection.y = tmp.y * cosf( angleDelta ) + tmp.x * sinf( angleDelta );
-            m_status            = eStatus::_ROTATING;
-            m_lastStatus        = eStatus::_FOOD_COLLECTED;
+            m_desiredDirection.x    = tmp.x * cosf( angleDelta ) - tmp.y * sinf( angleDelta );
+            m_desiredDirection.y    = tmp.y * cosf( angleDelta ) + tmp.x * sinf( angleDelta );
+            m_status                = eStatus::_ROTATING;
+            m_lastStatus            = eStatus::_FOOD_COLLECTED;
+            m_timeSinceLastHotSpot  = 0.0f;
         }
         else   /* searching for home */
         {
@@ -428,7 +430,7 @@ void Ant::walk( const float timeElapsed )
             else if( true == scanForPheromones() )  /* try to follow home pheromones */
             {
                 m_currSpeed = m_maxSpeed * 0.7f;
-                steerStrength = 3.5f;
+                steerStrength = 5.0f;
             }
             else
             {
@@ -442,7 +444,7 @@ void Ant::walk( const float timeElapsed )
         const float currAngle       = atan2f( m_velocity.y, m_velocity.x );
         const float desiredAngle    = atan2f( m_desiredDirection.y, m_desiredDirection.x );
 
-        if( fabsf( currAngle - desiredAngle ) <= 5 * M_PI / 180.0f )
+        if( fabsf( currAngle - desiredAngle ) <= 0.5f * M_PI / 180.0f )
         {
             if( m_lastStatus == eStatus::_FOOD_FOUND )
             {
