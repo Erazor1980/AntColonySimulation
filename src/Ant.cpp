@@ -341,7 +341,16 @@ void Ant::walk( const float timeElapsed )
         {
             if( true == pickUpFood() )
             {
+                /* flip the desired direction and rotate by a bit (5°) */
                 m_desiredDirection  = -m_desiredDirection;
+                auto tmp            = m_desiredDirection;
+                float angleDelta    = 5 * M_PI / 180.0f;;
+                if( rand() % 2 )
+                {
+                    angleDelta *= -1;
+                }                
+                m_desiredDirection.x = tmp.x * cosf( angleDelta ) - tmp.y * sinf( angleDelta );
+                m_desiredDirection.y = tmp.y * cosf( angleDelta ) + tmp.x * sinf( angleDelta );
                 m_status            = eStatus::_ROTATING;
                 m_lastStatus        = eStatus::_FOOD_FOUND;
             }
@@ -358,7 +367,16 @@ void Ant::walk( const float timeElapsed )
         /* brought food home */
         if( ( m_nestPos - transformPoint( m_bodyParts[ 0 ].first ) ).mag() < m_size / 2.0f )
         {
+            /* flip the desired direction and rotate by a bit (5°) */
             m_desiredDirection  = -m_desiredDirection;
+            auto tmp            = m_desiredDirection;
+            float angleDelta    = 5 * M_PI / 180.0f;;
+            if( rand() % 2 )
+            {
+                angleDelta *= -1;
+            }
+            m_desiredDirection.x = tmp.x * cosf( angleDelta ) - tmp.y * sinf( angleDelta );
+            m_desiredDirection.y = tmp.y * cosf( angleDelta ) + tmp.x * sinf( angleDelta );
             m_status            = eStatus::_ROTATING;
             m_lastStatus        = eStatus::_FOOD_COLLECTED;
         }
@@ -374,7 +392,6 @@ void Ant::walk( const float timeElapsed )
     {
         const float currAngle       = atan2f( m_velocity.y, m_velocity.x );
         const float desiredAngle    = atan2f( m_desiredDirection.y, m_desiredDirection.x );
-        m_velocity = m_velocity.norm();
 
         if( fabsf( currAngle - desiredAngle ) <= 5 * M_PI / 180.0f )
         {
@@ -389,12 +406,9 @@ void Ant::walk( const float timeElapsed )
         }
         else
         {
-            const float angleDelta = 3.5f * timeElapsed;
-            auto oldVel = m_velocity;
-            m_velocity.x = oldVel.x * cosf( angleDelta ) - oldVel.y * sinf( angleDelta );
-            m_velocity.y = oldVel.y * cosf( angleDelta ) + oldVel.x * sinf( angleDelta );
+            m_currSpeed = 0.1 * m_maxSpeed;
+            steerStrength = 15.0f;
         }
-        return;
     }
 
     /* boundary checks */

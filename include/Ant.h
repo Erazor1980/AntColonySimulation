@@ -22,7 +22,7 @@ private:
         _SEARCHING = 0,     /* searching for food */
         _FOOD_FOUND,        /* spotted food, going in its diraction */
         _FOOD_COLLECTED,    /* food collected, on the way back home */
-        _ROTATING           /* in place rotation (e.g. after picked up or delivered food */
+        _ROTATING           /* narrow rotation at low speed (e.g. after picked up or delivered food */
     };
 
     void init( const olc::vf2d position, const float size );
