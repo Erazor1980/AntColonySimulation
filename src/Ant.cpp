@@ -177,11 +177,11 @@ void Ant::update( PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones, 
         if( ( transformPoint( m_bodyParts[ 0 ].first ) - m_lastPheromonePos ).mag() > m_distPheremones )
         {
             m_lastPheromonePos = transformPoint( m_bodyParts[ 0 ].first );
-            if( eStatus::_FOOD_COLLECTED != m_status )
+            if( eStatus::_SEARCHING == m_status || eStatus::_FOOD_FOUND == m_status )
             {
                 pHomePheromones->addPheromone( m_lastPheromonePos );
             }
-            else
+            else if( eStatus::_FOOD_COLLECTED == m_status )
             {
                 pFoodPheromones->addPheromone( m_lastPheromonePos );
             }
@@ -316,11 +316,11 @@ void Ant::updateMotion()
 
 void Ant::walk( const float timeElapsed )
 {
-    const float wanderStrength = 0.17f;
     float steerStrength = 1.5f;
     
     if( eStatus::_SEARCHING == m_status )
     {
+        const float wanderStrength = 0.17f;
         const float rndAngle = ( float )rand() / ( float )RAND_MAX * 6.28318f;
         olc::vf2d rndPntUnitCircle;
         rndPntUnitCircle.x  = sinf( rndAngle );
@@ -344,7 +344,7 @@ void Ant::walk( const float timeElapsed )
                 /* flip the desired direction and rotate by a bit (5°) */
                 m_desiredDirection  = -m_desiredDirection;
                 auto tmp            = m_desiredDirection;
-                float angleDelta    = 5 * M_PI / 180.0f;;
+                float angleDelta    = 5 * ( float )M_PI / 180.0f;;
                 if( rand() % 2 )
                 {
                     angleDelta *= -1;
@@ -353,6 +353,10 @@ void Ant::walk( const float timeElapsed )
                 m_desiredDirection.y = tmp.y * cosf( angleDelta ) + tmp.x * sinf( angleDelta );
                 m_status            = eStatus::_ROTATING;
                 m_lastStatus        = eStatus::_FOOD_FOUND;
+            }
+            else
+            {
+                m_status = eStatus::_SEARCHING;
             }
         }
         else
@@ -370,7 +374,7 @@ void Ant::walk( const float timeElapsed )
             /* flip the desired direction and rotate by a bit (5°) */
             m_desiredDirection  = -m_desiredDirection;
             auto tmp            = m_desiredDirection;
-            float angleDelta    = 5 * M_PI / 180.0f;;
+            float angleDelta    = 5 * ( float )M_PI / 180.0f;;
             if( rand() % 2 )
             {
                 angleDelta *= -1;
@@ -406,7 +410,7 @@ void Ant::walk( const float timeElapsed )
         }
         else
         {
-            m_currSpeed = 0.1 * m_maxSpeed;
+            m_currSpeed = 0.1f * m_maxSpeed;
             steerStrength = 15.0f;
         }
     }
