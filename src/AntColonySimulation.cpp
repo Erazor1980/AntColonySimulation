@@ -58,7 +58,7 @@ bool AntColonySimulation::OnUserUpdate( float timeElapsed )
     }
 
     /* enable/disable pheromones drawing */
-    if( GetKey( olc::Key::F ).bPressed )
+    if( GetKey( olc::Key::P ).bPressed )
     {
         m_bDrawPheromones = !m_bDrawPheromones;
     }
