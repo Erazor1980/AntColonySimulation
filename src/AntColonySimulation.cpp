@@ -47,20 +47,36 @@ bool AntColonySimulation::OnUserUpdate( float timeElapsed )
 #if MEASURE_EXECUTION_TIMES
     auto startOnUserUpdate = std::chrono::high_resolution_clock::now();
 #endif
-
+    /* reset with many ants */
     if( GetKey( olc::Key::ESCAPE ).bPressed )
     {
-        reset();
+        reset( 300 );
     }
+
+    /* reset with 1 - 3 ants */
     if( GetKey( olc::Key::K1 ).bPressed )
     {
-        reset( true );
+        reset( 1 );
+    }
+    if( GetKey( olc::Key::K2 ).bPressed )
+    {
+        reset( 2 );
+    }
+    if( GetKey( olc::Key::K3 ).bPressed )
+    {
+        reset( 3 );
     }
 
     /* enable/disable pheromones drawing */
     if( GetKey( olc::Key::P ).bPressed )
     {
         m_bDrawPheromones = !m_bDrawPheromones;
+    }
+
+    /* enable/disable pheromones drawing */
+    if( GetKey( olc::Key::D ).bPressed )
+    {
+        m_bDrawDebugStuff = !m_bDrawDebugStuff;
     }
 
     /* left mouse click -> add food */
@@ -154,11 +170,11 @@ void AntColonySimulation::composeFrame()
 
     for( const auto &a : m_vAnts )
     {
-        a.draw( *this );
+        a.draw( *this, m_bDrawDebugStuff );
     }
 }
 
-void AntColonySimulation::reset( const bool bOnlyOneAnt )
+void AntColonySimulation::reset( const int numberOfAnts )
 {
     m_vFood.clear();
     m_vAnts.clear();
@@ -170,14 +186,17 @@ void AntColonySimulation::reset( const bool bOnlyOneAnt )
     const float height  = ( float )ScreenHeight();
 
     /* random ants */
-    if( true == bOnlyOneAnt )
+    if( numberOfAnts <= 10 )
     {
-        Ant ant( m_nestPos, 20, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
-        m_vAnts.push_back( ant );
+        for( int i = 0; i < numberOfAnts; ++i )
+        {
+            Ant ant( m_nestPos, 40, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
+            m_vAnts.push_back( ant );
+        }
     }
     else
     {
-        for( int i = 0; i < 200; ++i )
+        for( int i = 0; i < numberOfAnts; ++i )
         {
             Ant ant( m_nestPos + olc::vf2d( ( float )( -20 + rand() % 40 ), ( float )( -20 + rand() % 40 ) ), 20, m_vFood, m_nestPos, width, height, m_pHomePheromones, m_pFoodPheromones );
             m_vAnts.push_back( ant );

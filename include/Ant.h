@@ -8,7 +8,7 @@ public:
     Ant( const olc::vf2d position, const float size, std::vector< olc::vf2d >& vFood, const olc::vf2d& nestPos, const float screenWidth, const float screenHeight,
          PheromoneMap* pHomePheromones, PheromoneMap* pFoodPheromones );
 
-    void draw( olc::PixelGameEngine& pge ) const;
+    void draw( olc::PixelGameEngine& pge, const bool bDrawDebugStuff = false ) const;
     void update( const float timeElapsed );
     
     void setNestPos( const olc::vf2d& nestPos );    /* to be able to change it ouside */
@@ -72,4 +72,5 @@ private:
     const float m_maxTimePheromones = 20.0f;        /* maximum time (in seconds) since home/food found (if m_timeSinceLastHotSpot is higher, no pheromones will be created) */
     float m_scanCircleRadius;                       /* radius for each of the 3 circles for pheromone scanning */
     float m_scanCircleDist;                         /* distance from head to each of the 3 circles for pheromone scanning */
+
 };

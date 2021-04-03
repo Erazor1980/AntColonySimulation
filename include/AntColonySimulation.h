@@ -12,7 +12,7 @@ public:
 
 private:
     void composeFrame();
-    void reset( const bool bOnlyOneAnt = false );
+    void reset( const int numberOfAnts );
     
     std::vector< Ant > m_vAnts;
 
@@ -27,4 +27,5 @@ private:
     float m_timeSinceLastPheromonesUpdate = 0.0f;
 
     bool m_bDrawPheromones = true;
+    bool m_bDrawDebugStuff = false;
 };

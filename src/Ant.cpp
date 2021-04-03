@@ -62,7 +62,7 @@ void Ant::init( const olc::vf2d position, const float size )
     m_rightAntenna[ 2 ] = m_bodyParts[ 0 ].first - olc::vf2d( -0.20f * m_size, 0.40f * m_size );
 }
    
-void Ant::draw( olc::PixelGameEngine& pge ) const
+void Ant::draw( olc::PixelGameEngine& pge, const bool bDrawDebugStuff ) const
 {
     /* transform all points */
     olc::vf2d bodyPointsTransformed[ 4 ];
@@ -124,67 +124,63 @@ void Ant::draw( olc::PixelGameEngine& pge ) const
         pge.FillCircle( bodyPointsTransformed[ i ], ( int )m_bodyParts[ i ].second, olc::BLACK );
     }
 
-#if DEBUG_INFO
-    const auto headPos = bodyPointsTransformed[ 0 ];
-    const float angle = atan2f( m_velocity.y, m_velocity.x );
-    const float leftAngle = angle - m_viewingAngle / 2.0f;
-    const float rightAngle = angle + m_viewingAngle / 2.0f;
-
-    olc::vf2d pntLeft;
-    olc::vf2d pntRight;
-    pntLeft.x   = cosf( leftAngle );
-    pntLeft.y   = sinf( leftAngle );
-    pntRight.x  = cosf( rightAngle );
-    pntRight.y  = sinf( rightAngle );
-    pntLeft     = ( pntLeft.norm() * m_viewingRadius ) + headPos;
-    pntRight    = ( pntRight.norm() * m_viewingRadius ) + headPos;
-
-    olc::vf2d foodPos;
-    if( true == checkForFood( foodPos ) )
+    if( bDrawDebugStuff )
     {
-        pge.DrawCircle( headPos, ( int )m_viewingRadius, olc::GREEN );
-    }
-    else
-    {
-        pge.DrawCircle( headPos, ( int )m_viewingRadius, olc::RED );
-    }
-
-    pge.DrawLine( headPos, pntLeft, olc::DARK_BLUE );
-    pge.DrawLine( headPos, pntRight, olc::DARK_BLUE );
-
-    pge.DrawLine( headPos, headPos + m_desiredDirection, olc::DARK_BLUE );
-
-    pge.DrawStringDecal( m_pos - olc::vf2d( m_size, -m_size ), "Status: " + std::to_string( m_status ), olc::DARK_GREEN, { 1.5, 1.5 } );
-
-    /* draw desired direction */
-    auto desDirPnt = m_desiredDirection.norm() * 2 * m_size + transformPoint( m_bodyParts[ 0 ].first );
-    pge.DrawLine( transformPoint( m_bodyParts[ 0 ].first ), desDirPnt, olc::WHITE );
-#endif
-        
-#if DEBUG_INFO 
-    /* pheromones scanning */
-    {
-        const auto headPos = transformPoint( m_bodyParts[ 0 ].first );;
+        const auto headPos = bodyPointsTransformed[ 0 ];
         const float angle = atan2f( m_velocity.y, m_velocity.x );
-        const float leftAngle = angle - m_viewingAngle / 2.5f;
-        const float rightAngle = angle + m_viewingAngle / 2.5f;
+        const float leftAngle = angle - m_viewingAngle / 2.0f;
+        const float rightAngle = angle + m_viewingAngle / 2.0f;
 
         olc::vf2d pntLeft;
         olc::vf2d pntRight;
-        olc::vf2d pntCenter;
         pntLeft.x = cosf( leftAngle );
         pntLeft.y = sinf( leftAngle );
         pntRight.x = cosf( rightAngle );
         pntRight.y = sinf( rightAngle );
-        pntLeft = ( pntLeft.norm() * m_scanCircleDist ) + headPos;
-        pntRight = ( pntRight.norm() * m_scanCircleDist ) + headPos;
-        pntCenter = ( m_velocity.norm() * m_scanCircleDist ) + headPos;
+        pntLeft = ( pntLeft.norm() * m_viewingRadius ) + headPos;
+        pntRight = ( pntRight.norm() * m_viewingRadius ) + headPos;
 
-        pge.DrawCircle( pntLeft, ( int )m_scanCircleRadius );
-        pge.DrawCircle( pntRight, ( int )m_scanCircleRadius );
-        pge.DrawCircle( pntCenter, ( int )m_scanCircleRadius );
+        olc::vf2d foodPos;
+        if( true == checkForFood( foodPos ) )
+        {
+            pge.DrawCircle( headPos, ( int )m_viewingRadius, olc::GREEN );
+        }
+        else
+        {
+            pge.DrawCircle( headPos, ( int )m_viewingRadius, olc::RED );
+        }
+
+        pge.DrawLine( headPos, pntLeft, olc::DARK_BLUE );
+        pge.DrawLine( headPos, pntRight, olc::DARK_BLUE );
+
+        pge.DrawLine( headPos, headPos + m_desiredDirection, olc::DARK_BLUE );
+
+        pge.DrawStringDecal( m_pos - olc::vf2d( m_size, -m_size ), "Status: " + std::to_string( m_status ), olc::DARK_GREEN, { 1.5, 1.5 } );
+
+        /* draw desired direction */
+        auto desDirPnt = m_desiredDirection.norm() * 2 * m_size + transformPoint( m_bodyParts[ 0 ].first );
+        pge.DrawLine( transformPoint( m_bodyParts[ 0 ].first ), desDirPnt, olc::WHITE );
+
+        /* pheromones scanning */
+        {
+            const float angle = atan2f( m_velocity.y, m_velocity.x );
+            const float leftAngle = angle - m_viewingAngle / 2.5f;
+            const float rightAngle = angle + m_viewingAngle / 2.5f;
+
+            olc::vf2d pntCenter;
+            pntLeft.x = cosf( leftAngle );
+            pntLeft.y = sinf( leftAngle );
+            pntRight.x = cosf( rightAngle );
+            pntRight.y = sinf( rightAngle );
+            pntLeft = ( pntLeft.norm() * m_scanCircleDist ) + headPos;
+            pntRight = ( pntRight.norm() * m_scanCircleDist ) + headPos;
+            pntCenter = ( m_velocity.norm() * m_scanCircleDist ) + headPos;
+
+            pge.DrawCircle( pntLeft, ( int )m_scanCircleRadius );
+            pge.DrawCircle( pntRight, ( int )m_scanCircleRadius );
+            pge.DrawCircle( pntCenter, ( int )m_scanCircleRadius );
+        }
     }
-#endif
 }
 
 void Ant::update( const float timeElapsed )
